@@ -4,8 +4,8 @@
 
 <script setup>
 
-import { Employee } from "@/models/employee.js";
-import { Plant } from "@/models/plant.js";
+import {Employee} from "@/models/employee.js";
+import {Plant} from "@/models/plant.js";
 import {ref, onMounted} from 'vue';
 import {Application, Assets, Sprite, Container, Graphics, Text} from 'pixi.js';
 import {calculateTickMoney, initGame} from "@/services/game-utilities.service";
@@ -21,14 +21,14 @@ onMounted(() => {
         const app = new Application();
 
         // Initialize the application
-        await app.init({ background: '#1099bb', resizeTo: window });
+        await app.init({background: '#1099bb', resizeTo: window});
         app.stage.eventMode = 'static';
         app.stage.hitArea = app.screen;
 
         // Variables pour le zoom et le panoramique
         let isDragging = false;
-        let dragStartPosition = { x: 0, y: 0 };
-        let previousPosition = { x: 0, y: 0 };
+        let dragStartPosition = {x: 0, y: 0};
+        let previousPosition = {x: 0, y: 0};
         let zoomLevel = 1;
         const MIN_ZOOM = 0.5;
         const MAX_ZOOM = 2.0;
@@ -51,32 +51,32 @@ onMounted(() => {
         app.canvas.style.width = '99%';
         app.canvas.style.height = '99%';
         canvasContainer.value.appendChild(app.canvas);
-    window.addEventListener("beforeunload", (event) => {
-          // Sauvegarde ici
-          localStorage.setItem("MONEY_AMOUNT", GameService.MONEY_AMOUNT.toString());
-          localStorage.setItem("GAME_OBJECTS", JSON.stringify(GameService.GAME_OBJECTS));
-      });
+        window.addEventListener("beforeunload", (event) => {
+            // Sauvegarde ici
+            localStorage.setItem("MONEY_AMOUNT", GameService.MONEY_AMOUNT.toString());
+            localStorage.setItem("GAME_OBJECTS", JSON.stringify(GameService.GAME_OBJECTS));
+        });
 
-    // Load game data from localStorage
-      const oldMoney = localStorage.getItem("MONEY_AMOUNT");
-      if (oldMoney) {
-          GameService.MONEY_AMOUNT = Number(oldMoney);
-      }
-      const oldObjects = localStorage.getItem("GAME_OBJECTS");
-        if(oldObjects) {
+        // Load game data from localStorage
+        const oldMoney = localStorage.getItem("MONEY_AMOUNT");
+        if (oldMoney) {
+            GameService.MONEY_AMOUNT = Number(oldMoney);
+        }
+        const oldObjects = localStorage.getItem("GAME_OBJECTS");
+        if (oldObjects) {
             console.log(...JSON.parse(oldObjects));
             GameService.GAME_OBJECTS.push(...JSON.parse(oldObjects));
         }
 
-        if(oldObjects && !oldObjects?.length) {
+        if (oldObjects && !oldObjects?.length) {
             initGame()
         }
 
-      // Append the application canvas to the container
-    app.canvas.className = 'pixi-canvas';
-    app.canvas.style.width = '99%';
-    app.canvas.style.height = '99%';
-    canvasContainer.value.appendChild(app.canvas);
+        // Append the application canvas to the container
+        app.canvas.className = 'pixi-canvas';
+        app.canvas.style.width = '99%';
+        app.canvas.style.height = '99%';
+        canvasContainer.value.appendChild(app.canvas);
 
         // Créer un conteneur pour la grille
         const gridContainer = new Container();
@@ -170,7 +170,7 @@ onMounted(() => {
         // Variables pour le mode placement style Sims
         let placementMode = false;
         let placementObject = null;
-        let lastKnownMousePosition = { x: 0, y: 0 };
+        let lastKnownMousePosition = {x: 0, y: 0};
 
         const sidebar = new Container();
 
@@ -248,7 +248,7 @@ onMounted(() => {
             if (event.data.button === 0 && !isOverUI(event.global) && !placementMode) {
                 isDragging = true;
                 dragStartPosition = event.global.clone();
-                previousPosition = { x: gridContainer.x, y: gridContainer.y };
+                previousPosition = {x: gridContainer.x, y: gridContainer.y};
                 app.canvas.style.cursor = 'grabbing';
             }
         });
