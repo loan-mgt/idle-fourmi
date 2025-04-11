@@ -1,17 +1,12 @@
 <script setup lang="ts">
+import CanvaComponent from './components/canva.component.vue';
+
 console.log('App.vue loaded')
 </script>
 
 <template>
   <main>
-    <div>
-      Salut la team !
-    </div>
+    <CanvaComponent />
   </main>
 </template>
-
-<style lang="css" scoped>
-div {
-  color: darkorchid;
-}
-</style>
+<style lang="css" scoped></style>
