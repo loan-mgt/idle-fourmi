@@ -15,6 +15,17 @@ onMounted(() => {
 
         // Initialize the application
         await app.init({ background: '#1099bb', resizeTo: window });
+        app.stage.eventMode = 'static';
+        app.stage.hitArea = app.screen;
+
+        window.addEventListener('resize', () => {
+            toolbar.y = app.screen.height - 50;
+            toolbarBg.clear();
+            toolbarBg.rect(0, 0, app.screen.width, 50);
+            toolbarBg.fill(0x333333, 0.7);
+
+            app.stage.hitArea = app.screen; // maj du hitArea aussi !
+        });
 
         // Append the application canvas to the container
         app.canvas.className = 'pixi-canvas';
@@ -81,6 +92,11 @@ onMounted(() => {
         btn.eventMode = 'static';
         btn.cursor = 'pointer';
 
+        btn.on('pointerdown', (event) => {
+            placementMode = true;
+            startPlacementMode(event);
+        });
+
         // Variables pour le mode placement style Sims
         let placementMode = false;
         let placementObject = null;
@@ -93,31 +109,33 @@ onMounted(() => {
 
         // Fonction pour activer le mode placement
         function startPlacementMode(initialEvent) {
-            // Create a clone of the button
-            const clonedBtn = btn.clone();
+            const clonedBtn = new Graphics();
+            clonedBtn.rect(0, 0, 50, 50);
+            clonedBtn.fill(0xFF0000, 0.5); // Rouge avec transparence
+            clonedBtn.eventMode = 'static';
+            clonedBtn.cursor = 'grabbing';
 
-            // Position the cloned button next to the original
-            clonedBtn.x = initialEvent.y; // Adjust position to avoid overlap
-            clonedBtn.y = initialEvent.y;
+            clonedBtn.x = initialEvent.global.x - 25;
+            clonedBtn.y = initialEvent.global.y - 25;
 
-            // Add interaction for the cloned button
-            clonedBtn.on('pointerdown', (event) => {
-                console.log(`Cloned button clicked!`);
-                startPlacementMode(event);
-                event.stopPropagation();
-            });
-
-            // Add the cloned button to the toolbar
-            toolbar.addChild(clonedBtn);
+            placementObject = clonedBtn;
+            app.stage.addChild(clonedBtn);
         }
 
-
-        // Associer l'activation du mode placement au clic sur le bouton
-        btn.on('pointerdown', (event) => {
-            console.log(`Button clicked!`);
-            startPlacementMode(event);
-            event.stopPropagation();
+        app.ticker.add(() => {
+            if (placementMode && placementObject) {
+                placementObject.x = lastKnownMousePosition.x - placementObject.width / 2;
+                placementObject.y = lastKnownMousePosition.y - placementObject.height / 2;
+            }
         });
+
+        function endPlacementMode() {
+            placementMode = false;
+            if (placementObject) {
+                app.stage.removeChild(placementObject);
+                placementObject = null;
+            }
+        }
 
         // Add btn to toolbar
         toolbar.addChild(btn);
