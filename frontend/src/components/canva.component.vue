@@ -19,6 +19,15 @@ onMounted(() => {
     app.stage.eventMode = 'static';
     app.stage.hitArea = app.screen;
 
+    // Variables pour le zoom et le panoramique
+    let isDragging = false;
+    let dragStartPosition = { x: 0, y: 0 };
+    let previousPosition = { x: 0, y: 0 };
+    let zoomLevel = 1;
+    const MIN_ZOOM = 0.5;
+    const MAX_ZOOM = 2.0;
+    const ZOOM_STEP = 0.1;
+
     window.addEventListener('resize', () => {
       toolbar.y = app.screen.height - 50;
       toolbarBg.clear();
@@ -64,10 +73,11 @@ onMounted(() => {
       }
     }
 
-    // Fonction pour centrer la grille
+    // Fonction pour centrer la grille avec prise en compte du zoom
     function updateGridPosition() {
-      gridContainer.x = (app.screen.width - gridWidth * tileWidth) / 2;
-      gridContainer.y = (app.screen.height - gridHeight * tileHeight) / 2;
+      gridContainer.x = (app.screen.width - gridWidth * tileWidth * zoomLevel) / 2;
+      gridContainer.y = (app.screen.height - gridHeight * tileHeight * zoomLevel) / 2;
+      gridContainer.scale.set(zoomLevel);
     }
 
     // Positionner la grille initialement
@@ -133,6 +143,81 @@ onMounted(() => {
     // Écouteur pour suivre la position de la souris globalement
     app.stage.on('pointermove', (event) => {
       lastKnownMousePosition = event.global.clone();
+
+      // Gestion du panoramique (pan)
+      if (isDragging && !isOverUI(lastKnownMousePosition)) {
+        const dx = event.global.x - dragStartPosition.x;
+        const dy = event.global.y - dragStartPosition.y;
+
+        gridContainer.x = previousPosition.x + dx;
+        gridContainer.y = previousPosition.y + dy;
+      }
+    });
+
+    // Fonction pour vérifier si la souris est au-dessus d'un élément d'interface
+    function isOverUI(position) {
+      return (
+          // Sur la sidebar
+          position.x >= sidebar.x && position.x <= sidebar.x + sidebar.width &&
+          position.y >= sidebar.y && position.y <= sidebar.y + sidebar.height ||
+          // Sur la toolbar
+          position.x >= toolbar.x && position.x <= toolbar.x + toolbar.width &&
+          position.y >= toolbar.y && position.y <= toolbar.y + toolbar.height
+      );
+    }
+
+    // Gestion du zoom avec la molette de souris
+    app.canvas.addEventListener('wheel', (event) => {
+      event.preventDefault();
+
+      // Vérifier si la souris est en dehors de la sidebar
+      if (!isOverUI(lastKnownMousePosition)) {
+        // Déterminer la direction du zoom
+        const zoomDirection = event.deltaY < 0 ? 1 : -1;
+
+        // Calculer le nouveau niveau de zoom
+        const newZoomLevel = zoomLevel + (zoomDirection * ZOOM_STEP);
+
+        // Appliquer le nouveau zoom en respectant les limites
+        zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoomLevel));
+
+        // Mettre à jour la position et l'échelle de la grille
+        gridContainer.scale.set(zoomLevel);
+
+        // Pour un zoom centré sur la position de la souris, calculer l'offset
+        const mousePositionRelativeToGrid = {
+          x: (lastKnownMousePosition.x - gridContainer.x) / gridContainer.scale.x,
+          y: (lastKnownMousePosition.y - gridContainer.y) / gridContainer.scale.y
+        };
+
+        gridContainer.x = lastKnownMousePosition.x - mousePositionRelativeToGrid.x * zoomLevel;
+        gridContainer.y = lastKnownMousePosition.y - mousePositionRelativeToGrid.y * zoomLevel;
+      }
+    });
+
+    // Gestionnaire pour commencer le panoramique
+    app.stage.on('pointerdown', (event) => {
+      if (event.data.button === 0 && !isOverUI(event.global) && !placementMode) {
+        isDragging = true;
+        dragStartPosition = event.global.clone();
+        previousPosition = { x: gridContainer.x, y: gridContainer.y };
+        app.canvas.style.cursor = 'grabbing';
+      }
+    });
+
+    // Gestionnaire pour terminer le panoramique
+    app.stage.on('pointerup', () => {
+      if (isDragging) {
+        isDragging = false;
+        app.canvas.style.cursor = 'default';
+      }
+    });
+
+    app.stage.on('pointerupoutside', () => {
+      if (isDragging) {
+        isDragging = false;
+        app.canvas.style.cursor = 'default';
+      }
     });
 
     // Associer l'activation du mode placement au clic sur le bouton
