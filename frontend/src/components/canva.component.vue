@@ -9,16 +9,9 @@ import { calculateTickMoney } from "@/services/game-utilities.service";
 import { GameService } from "@/services/game.service.js";
 import { Desk } from "@/models/desk.js";
 import { Developer } from "@/models/employee.js";
-import { Employee } from "@/models/employee.js";
-import { Plant } from "@/models/plant.js";
 
 const canvasContainer = ref(null);
 
-const baseObjectList = [
-    Desk,
-    Employee,
-    Plant
-]
 
 onMounted(() => {
     (async () => {
