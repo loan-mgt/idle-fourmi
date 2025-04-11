@@ -102,11 +102,6 @@ onMounted(() => {
             lastKnownMousePosition = event.global.clone();
         });
 
-        // Fonction pour activer le mode placement
-        function startPlacementMode(initialEvent) {
-            debugger
-        }
-
 
         // Associer l'activation du mode placement au clic sur le bouton
         btn.on('pointerdown', (event) => {
