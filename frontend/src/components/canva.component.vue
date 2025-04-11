@@ -3,14 +3,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { Application, Assets, Sprite, Container, Graphics, Text } from 'pixi.js';
-import { calculateTickMoney } from "@/services/game-utilities.service";
-import { GameService } from "@/services/game.service.js";
-import { Desk } from "@/models/desk.js";
-import { Developer } from "@/models/employee.js";
+
 import { Employee } from "@/models/employee.js";
 import { Plant } from "@/models/plant.js";
+import {ref, onMounted} from 'vue';
+import {Application, Assets, Sprite, Container, Graphics, Text} from 'pixi.js';
+import {calculateTickMoney, initGame} from "@/services/game-utilities.service";
+import {GameService} from "@/services/game.service.js";
+import {Desk} from "@/models/desk.js";
 
 const canvasContainer = ref(null);
 
@@ -51,6 +51,32 @@ onMounted(() => {
         app.canvas.style.width = '99%';
         app.canvas.style.height = '99%';
         canvasContainer.value.appendChild(app.canvas);
+    window.addEventListener("beforeunload", (event) => {
+          // Sauvegarde ici
+          localStorage.setItem("MONEY_AMOUNT", GameService.MONEY_AMOUNT.toString());
+          localStorage.setItem("GAME_OBJECTS", JSON.stringify(GameService.GAME_OBJECTS));
+      });
+
+    // Load game data from localStorage
+      const oldMoney = localStorage.getItem("MONEY_AMOUNT");
+      if (oldMoney) {
+          GameService.MONEY_AMOUNT = Number(oldMoney);
+      }
+      const oldObjects = localStorage.getItem("GAME_OBJECTS");
+        if(oldObjects) {
+            console.log(...JSON.parse(oldObjects));
+            GameService.GAME_OBJECTS.push(...JSON.parse(oldObjects));
+        }
+
+        if(oldObjects && !oldObjects?.length) {
+            initGame()
+        }
+
+      // Append the application canvas to the container
+    app.canvas.className = 'pixi-canvas';
+    app.canvas.style.width = '99%';
+    app.canvas.style.height = '99%';
+    canvasContainer.value.appendChild(app.canvas);
 
         // Créer un conteneur pour la grille
         const gridContainer = new Container();
@@ -236,11 +262,6 @@ onMounted(() => {
         });
 
         // For Money calculation
-        const bureau = new Desk(1, 1);
-        bureau.employees.push(new Developer(1, 1));
-
-        GameService.GAME_OBJECTS.push(bureau);
-
         let elapsed = 0;
         app.ticker.add((time) => {
             elapsed += time.count;

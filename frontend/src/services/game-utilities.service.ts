@@ -1,6 +1,6 @@
 import {GameService} from "@/services/game.service";
 import {Desk} from "@/models/desk";
-import {Employee} from "@/models/employee";
+import {Developer, Employee} from "@/models/employee";
 import {BaseObject} from "@/models/base-object";
 import {Plant} from "@/models/plant";
 
@@ -61,4 +61,11 @@ export function checkEmployeePlant(employee: Employee): Plant | undefined {
         }
     });
     return undefined;
+}
+
+export function initGame() {
+    const bureau = new Desk(1, 1);
+    bureau.employees.push(new Developer(1, 1));
+
+    GameService.GAME_OBJECTS.push(bureau);
 }
