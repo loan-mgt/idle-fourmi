@@ -1,7 +1,15 @@
+export enum TypeEnum {
+    DEFAULT,
+    DESK,
+    EMPLOYEE,
+    PLANT
+}
+
 export class BaseObject {
+    private _type: TypeEnum = TypeEnum.DEFAULT;
     private _level: number;
     private _multiplicatorBonus: number;
-    static sprite: string = "";
+    private static _sprite: string = "";
 
     private _x: number;
     private _y: number;
@@ -66,5 +74,22 @@ export class BaseObject {
 
     set height(value: number) {
         this._height = value;
+    }
+
+
+    get type(): TypeEnum {
+        return this._type;
+    }
+
+    set type(value: TypeEnum) {
+        this._type = value;
+    }
+
+    static get sprite(): string {
+        return this._sprite;
+    }
+
+    static set sprite(value: string) {
+        this._sprite = value;
     }
 }

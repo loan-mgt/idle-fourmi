@@ -87,11 +87,12 @@ onMounted(() => {
         }
         const oldObjects = localStorage.getItem("GAME_OBJECTS");
         if (oldObjects) {
-            console.log(...JSON.parse(oldObjects));
+            debugger;
+            JSON.parse(oldObjects);
             GameService.GAME_OBJECTS.push(...JSON.parse(oldObjects));
         }
 
-        if (oldObjects && !oldObjects?.length) {
+        if (GameService.GAME_OBJECTS && !GameService.GAME_OBJECTS.length) {
             initGame()
         }
 

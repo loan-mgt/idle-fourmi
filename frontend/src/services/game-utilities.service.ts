@@ -1,7 +1,6 @@
 import {GameService} from "@/services/game.service";
 import {Desk} from "@/models/desk";
-import {Developer, Employee} from "@/models/employee";
-import {BaseObject} from "@/models/base-object";
+import {BaseObject, TypeEnum} from "@/models/base-object";
 import {Plant} from "@/models/plant";
 
 
@@ -23,24 +22,22 @@ export function calculateTickMoney(): number {
     GameService.GAME_OBJECTS.forEach(object => {
         // On prend les bureaux
 
-        if (object instanceof Desk) {
-            const desk: Desk = object;
+        if (object.type === TypeEnum.DESK) {
+            const desk = object as Desk;
 
-            desk.employees.forEach(employee => {
-                // Base argent généré par un employé
-                let employeeMoney = employee.euroPerTick * employee.level * employee.multiplicatorBonus;
+            // Base argent généré par un employé
+            let employeeMoney = desk.euroPerTick * desk.level * desk.multiplicatorBonus;
 
-                // On multiplie par le level du DESK
-                employeeMoney *= desk.level * desk.multiplicatorBonus;
+            // On multiplie par le level du DESK
+            employeeMoney *= desk.level * desk.multiplicatorBonus;
 
-                const plant = checkEmployeePlant(employee);
-                if (plant) {
-                    employeeMoney *= plant.multiplicatorBonus;
-                }
+            const plant = checkDeskPlant(desk);
+            if (plant) {
+                employeeMoney *= plant.multiplicatorBonus;
+            }
 
-                // On a finit pour l'employee, on add l'argent
-                moneyToAdd += employeeMoney;
-            });
+            // On a finit pour l'employee, on add l'argent
+            moneyToAdd += employeeMoney;
         }
 
     })
@@ -48,12 +45,12 @@ export function calculateTickMoney(): number {
     return moneyToAdd;
 }
 
-export function checkEmployeePlant(employee: Employee): Plant | undefined {
+export function checkDeskPlant(desk: Desk): Plant | undefined {
     GameService.GAME_OBJECTS.forEach(object => {
-        if (object instanceof Plant) {
-            const plant: Plant = object;
-            const x = employee.x;
-            const y = employee.y;
+        if (object.type === TypeEnum.PLANT) {
+            const plant = object as Plant;
+            const x = desk.x;
+            const y = desk.y;
             if (((plant.x - plant.actionRadius) <= x && x < (plant.x + plant.width + plant.actionRadius) &&
                 ((plant.y - plant.actionRadius) <= y && y < (plant.y + plant.height + plant.actionRadius)))) {
                 return object;
@@ -63,9 +60,12 @@ export function checkEmployeePlant(employee: Employee): Plant | undefined {
     return undefined;
 }
 
-export function initGame() {
+export function initGame(): void {
     const bureau = new Desk(1, 1);
-    bureau.employees.push(new Developer(1, 1));
 
     GameService.GAME_OBJECTS.push(bureau);
+}
+
+export function loadSave(): void {
+
 }

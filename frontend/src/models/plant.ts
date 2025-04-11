@@ -1,4 +1,4 @@
-import { BaseObject } from "@/models/base-object";
+import {BaseObject, TypeEnum} from "@/models/base-object";
 
 export class Plant extends BaseObject {
     private _actionRadius: number = 2;
@@ -7,6 +7,7 @@ export class Plant extends BaseObject {
     constructor(_x: number, _y: number, _multiplicatorBonus = 1.1) {
         super(_x, _y);
         this.multiplicatorBonus = _multiplicatorBonus;
+        this.type = TypeEnum.PLANT;
     }
 
     get actionRadius(): number {
