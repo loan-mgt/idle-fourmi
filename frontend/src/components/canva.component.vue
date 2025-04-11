@@ -8,7 +8,7 @@ import {Employee} from "@/models/employee.js";
 import {Plant} from "@/models/plant.js";
 import {onMounted, ref} from 'vue';
 import {Application, Assets, Container, Graphics, Sprite, Text} from 'pixi.js';
-import {calculateTickMoney, initGame} from "@/services/game-utilities.service";
+import {calculateTickMoney} from "@/services/game-utilities.service";
 import {GameService} from "@/services/game.service.js";
 import {Desk} from "@/models/desk.js";
 
@@ -423,6 +423,33 @@ onMounted(() => {
                 const gridY = Math.floor(localPos.y / tileHeight);
 
                 if (gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight) {
+                    // Vérifier d'abord si le joueur a assez d'argent
+                    const tempObject = new selectedObjectType(gridX, gridY);
+
+                    if (GameService.MONEY_AMOUNT < tempObject.cost) {
+                        // Pas assez d'argent, afficher un message et annuler le placement
+                        console.log("Pas assez d'argent pour placer cet objet!");
+
+                        // Option: créer une notification visuelle temporaire
+                        const notificationText = new Text("Fonds insuffisants!", {
+                            fontSize: 20,
+                            fill: 0xff0000,
+                            align: 'center',
+                        });
+                        notificationText.x = app.screen.width / 2 - 100;
+                        notificationText.y = app.screen.height / 2 - 50;
+                        app.stage.addChild(notificationText);
+
+                        // Faire disparaître la notification après 2 secondes
+                        setTimeout(() => {
+                            app.stage.removeChild(notificationText);
+                        }, 2000);
+
+                        app.stage.removeChild(placementObject);
+                        placementObject = null;
+                        return;
+                    }
+
                     // Créer l'objet final avec le bon sprite
                     const createFinalObject = (texture) => {
                         // Créer l'instance de l'objet pour le jeu
@@ -445,6 +472,8 @@ onMounted(() => {
                         GameService.GAME_OBJECTS.push(newGameObject);
                         console.log('Objet placé à la cellule:', gridX, gridY, newGameObject);
                     };
+
+                    // Le reste de la fonction reste inchangé...
                     if (selectedObjectType.sprite && selectedObjectType.sprite !== '') {
                         Assets.load(selectedObjectType.sprite).then(texture => {
                             createFinalObject(texture);
