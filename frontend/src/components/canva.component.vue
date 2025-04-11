@@ -4,13 +4,13 @@
 
 <script setup>
 
-import { Employee } from "@/models/employee.js";
-import { Plant } from "@/models/plant.js";
-import { onMounted, ref } from 'vue';
-import { Application, Assets, Container, Graphics, Sprite, Text } from 'pixi.js';
-import {calculateTickMoney, initGame, loadSave} from "@/services/game-utilities.service";
-import { GameService } from "@/services/game.service.js";
-import { Desk } from "@/models/desk.js";
+import {Employee} from "@/models/employee.js";
+import {Plant} from "@/models/plant.js";
+import {onMounted, ref} from 'vue';
+import {Application, Assets, Container, Graphics, Sprite, Text} from 'pixi.js';
+import {calculateTickMoney, initGame} from "@/services/game-utilities.service";
+import {GameService} from "@/services/game.service.js";
+import {Desk} from "@/models/desk.js";
 
 const canvasContainer = ref(null);
 
@@ -22,7 +22,7 @@ onMounted(() => {
         let selectedObjectType = null;
 
         // Initialize the application
-        await app.init({ background: '#1099bb', resizeTo: window });
+        await app.init({background: '#1099bb', resizeTo: window});
         app.stage.eventMode = 'static';
         app.stage.hitArea = app.screen;
 
@@ -48,8 +48,8 @@ onMounted(() => {
 
         // Variables pour le zoom et le panoramique
         let isDragging = false;
-        let dragStartPosition = { x: 0, y: 0 };
-        let previousPosition = { x: 0, y: 0 };
+        let dragStartPosition = {x: 0, y: 0};
+        let previousPosition = {x: 0, y: 0};
         let zoomLevel = 1;
         const MIN_ZOOM = 0.5;
         const MAX_ZOOM = 2.0;
@@ -213,7 +213,7 @@ onMounted(() => {
         // Variables pour le mode placement style Sims
         let placementMode = false;
         let placementObject = null;
-        let lastKnownMousePosition = { x: 0, y: 0 };
+        let lastKnownMousePosition = {x: 0, y: 0};
 
         const sidebar = new Container();
 
@@ -298,7 +298,7 @@ onMounted(() => {
             if (event.data.button === 0 && !isOverUI(event.global) && !placementMode) {
                 isDragging = true;
                 dragStartPosition = event.global.clone();
-                previousPosition = { x: gridContainer.x, y: gridContainer.y };
+                previousPosition = {x: gridContainer.x, y: gridContainer.y};
                 app.canvas.style.cursor = 'grabbing';
             }
         });
@@ -422,6 +422,10 @@ onMounted(() => {
                     const createFinalObject = (texture) => {
                         // Créer l'instance de l'objet pour le jeu
                         const newGameObject = new selectedObjectType(gridX, gridY);
+                        // Soustraire le coût de l'objet du montant d'argent
+                        GameService.MONEY_AMOUNT -= newGameObject.cost;
+                        // Mettre à jour l'affichage du montant d'argent
+                        moneyDisplay.text = `Argent: ${GameService.MONEY_AMOUNT}`;
 
                         const finalSprite = new Sprite(texture);
                         // Ajuster la taille du sprite en fonction de l'objet
@@ -436,7 +440,6 @@ onMounted(() => {
                         GameService.GAME_OBJECTS.push(newGameObject);
                         console.log('Objet placé à la cellule:', gridX, gridY, newGameObject);
                     };
-
                     if (selectedObjectType.sprite && selectedObjectType.sprite !== '') {
                         Assets.load(selectedObjectType.sprite).then(texture => {
                             createFinalObject(texture);
