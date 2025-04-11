@@ -71,16 +71,16 @@ onMounted(() => {
 
         // Add a visible background for the toolbar
         const toolbarBg = new Graphics();
-        toolbarBg.beginFill(0x333333, 0.7);
-        toolbarBg.drawRect(0, 0, app.screen.width, 50);
-        toolbarBg.endFill();
+        toolbarBg.Graphics.beginFill(0x333333, 0.7);
+        toolbarBg.Graphics.drawRect(0, 0, app.screen.width, 50);
+        toolbarBg.Graphics.endFill();
         toolbar.addChild(toolbarBg);
 
         // Add a button to the toolbar
         const btn = new Graphics();
-        btn.beginFill(0xFF0000);
-        btn.drawRect(0, 0, 50, 50);
-        btn.endFill();
+        btn.Graphics.beginFill(0xFF0000);
+        btn.Graphics.drawRect(0, 0, 50, 50);
+        btn.Graphics.endFill();
         btn.x = 10;
         btn.y = 0;
 
@@ -103,9 +103,9 @@ onMounted(() => {
         window.addEventListener('resize', () => {
             toolbar.y = app.screen.height - 50;
             toolbarBg.clear();
-            toolbarBg.beginFill(0x333333, 0.7);
-            toolbarBg.drawRect(0, 0, app.screen.width, 50);
-            toolbarBg.endFill();
+            toolbarBg.Graphics.beginFill(0x333333, 0.7);
+            toolbarBg.Graphics.drawRect(0, 0, app.screen.width, 50);
+            toolbarBg.Graphics.endFill();
         });
     })();
 });
