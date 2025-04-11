@@ -1,4 +1,4 @@
-import { BaseObject } from "@/models/base-object";
+import {BaseObject, TypeEnum} from "@/models/base-object";
 
 export class Employee extends BaseObject {
     private _euroPerTick: number;
@@ -7,6 +7,7 @@ export class Employee extends BaseObject {
     constructor(_x: number, _y: number, euroPerTick = 1) {
         super(_x, _y);
         this._euroPerTick = euroPerTick;
+        this.type = TypeEnum.EMPLOYEE;
     }
 
 

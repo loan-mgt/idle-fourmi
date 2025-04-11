@@ -1,33 +1,22 @@
-import { BaseObject } from "@/models/base-object";
-import { Employee } from "@/models/employee";
+import {BaseObject, TypeEnum} from "@/models/base-object";
 
 export class Desk extends BaseObject {
-    private _employees: Employee[] = [];
-    private _maxNumberEmployee: number;
+    private _euroPerTick: number = 1;
     static sprite: string = "/src/assets/sprites/desk.png";
 
     constructor(_x: number, _y: number, maxNumberEmployee = 1) {
         super(_x, _y);
-        this._maxNumberEmployee = maxNumberEmployee;
         this.width = 2;
         this.height = 1;
+        this.type = TypeEnum.DESK;
     }
 
-
-    get employees(): Employee[] {
-        return this._employees;
+    get euroPerTick(): number {
+        return this._euroPerTick;
     }
 
-    set employees(value: Employee[]) {
-        this._employees = value;
-    }
-
-    get maxNumberEmployee(): number {
-        return this._maxNumberEmployee;
-    }
-
-    set maxNumberEmployee(value: number) {
-        this._maxNumberEmployee = value;
+    set euroPerTick(value: number) {
+        this._euroPerTick = value;
     }
 }
 
@@ -36,5 +25,6 @@ export class MaxiDesk extends Desk {
         super(_x, _y, maxNumberEmployee);
         this.width = 4;
         this.height = 4;
+        this.euroPerTick = 4;
     }
 }
