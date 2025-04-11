@@ -2,7 +2,7 @@ import {BaseObject} from "@/models/base-object.ts";
 import type {Employee} from "@/models/employee.ts";
 
 export class Desk extends BaseObject{
-    private _employee: Employee[] = [];
+    private _employees: Employee[] = [];
     private _maxNumberEmployee: number;
 
     constructor(_x:number,_y:number, maxNumberEmployee = 1) {
@@ -13,12 +13,12 @@ export class Desk extends BaseObject{
     }
 
 
-    get employee(): Employee[] {
-        return this._employee;
+    get employees(): Employee[] {
+        return this._employees;
     }
 
-    set employee(value: Employee[]) {
-        this._employee = value;
+    set employees(value: Employee[]) {
+        this._employees = value;
     }
 
     get maxNumberEmployee(): number {
