@@ -64,23 +64,16 @@ onMounted(() => {
             console.log(`Toolbar clicked at: ${mousePosition.x}, ${mousePosition.y}`);
         });
 
-        toolbar.on('pointerup', (event) => {
-            const mousePosition = event.global;
-            console.log(`Toolbar released at: ${mousePosition.x}, ${mousePosition.y}`);
-        });
-
-        // Add a visible background for the toolbar
+        // Add a visible background for the toolbar - using correct Graphics API
         const toolbarBg = new Graphics();
-        toolbarBg.Graphics.beginFill(0x333333, 0.7);
-        toolbarBg.Graphics.drawRect(0, 0, app.screen.width, 50);
-        toolbarBg.Graphics.endFill();
+        toolbarBg.rect(0, 0, app.screen.width, 50);
+        toolbarBg.fill(0x333333, 0.7);
         toolbar.addChild(toolbarBg);
 
-        // Add a button to the toolbar
+        // Add a button to the toolbar - using correct Graphics API
         const btn = new Graphics();
-        btn.Graphics.beginFill(0xFF0000);
-        btn.Graphics.drawRect(0, 0, 50, 50);
-        btn.Graphics.endFill();
+        btn.rect(0, 0, 50, 50);
+        btn.fill(0xFF0000);
         btn.x = 10;
         btn.y = 0;
 
@@ -88,9 +81,27 @@ onMounted(() => {
         btn.eventMode = 'static';
         btn.cursor = 'pointer';
 
+        // Variables pour le mode placement style Sims
+        let placementMode = false;
+        let placementObject = null;
+        let lastKnownMousePosition = { x: 0, y: 0 };
+
+        // Écouteur pour suivre la position de la souris globalement
+        app.stage.on('pointermove', (event) => {
+            lastKnownMousePosition = event.global.clone();
+        });
+
+        // Fonction pour activer le mode placement
+        function startPlacementMode(initialEvent) {
+            debugger
+        }
+
+
+        // Associer l'activation du mode placement au clic sur le bouton
         btn.on('pointerdown', (event) => {
             console.log(`Button clicked!`);
-            event.stopPropagation(); // Prevent event from bubbling to toolbar
+            startPlacementMode(event);
+            event.stopPropagation();
         });
 
         // Add btn to toolbar
@@ -99,18 +110,22 @@ onMounted(() => {
         // Add toolbar to stage
         app.stage.addChild(toolbar);
 
+        // Ajouter un gestionnaire de touche Escape pour annuler le mode placement
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && placementMode) {
+                endPlacementMode();
+            }
+        });
+
         // Handle window resize to keep toolbar at bottom
         window.addEventListener('resize', () => {
             toolbar.y = app.screen.height - 50;
             toolbarBg.clear();
-            toolbarBg.Graphics.beginFill(0x333333, 0.7);
-            toolbarBg.Graphics.drawRect(0, 0, app.screen.width, 50);
-            toolbarBg.Graphics.endFill();
+            toolbarBg.rect(0, 0, app.screen.width, 50);
+            toolbarBg.fill(0x333333, 0.7);
         });
     })();
 });
 </script>
 
-<style scoped>
-/* You can add some styling for the canvas container if needed */
-</style>
+<style scoped></style>
