@@ -83,7 +83,12 @@ onMounted(() => {
         // Load game data from localStorage
         const oldMoney = localStorage.getItem("MONEY_AMOUNT");
         if (oldMoney) {
-            GameService.MONEY_AMOUNT = Number(oldMoney);
+            if (isNaN(Number(oldMoney))) {
+                GameService.MONEY_AMOUNT = 0;
+            }
+            else {
+                GameService.MONEY_AMOUNT = Number(oldMoney)
+            }
         }
         const oldObjects = localStorage.getItem("GAME_OBJECTS");
         if (oldObjects) {
