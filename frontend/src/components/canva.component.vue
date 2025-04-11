@@ -125,6 +125,11 @@ onMounted(() => {
             clonedBtn.x = initialEvent.global.x - 25;
             clonedBtn.y = initialEvent.global.y - 25;
 
+            clonedBtn.onpointerdown = (event) => {
+                // Si le bouton est cliqué, on annule le mode placement
+                finishPlacementMode(event);
+            };
+
             placementObject = clonedBtn;
             app.stage.addChild(clonedBtn);
         }
@@ -136,12 +141,36 @@ onMounted(() => {
             }
         });
 
-        function endPlacementMode() {
+        function cancelPlacementMode() {
             placementMode = false;
             if (placementObject) {
                 app.stage.removeChild(placementObject);
                 placementObject = null;
             }
+        }
+
+        function finishPlacementMode(event) {
+            //if right click, cancel placement mode
+            if (event.data.button === 2) {
+                cancelPlacementMode();
+                return;
+            }
+
+            // else finish placement mode
+            placementMode = false;
+            if (placementObject) {
+                placementObject.onpointerdown = null; // Remove the pointerdown event
+                placementObject.cursor = 'pointer'; // Change cursor back to pointer
+                placementObject.interactive = false; // Make it non-interactive
+                placementObject.clear();
+                placementObject.rect(0, 0, 50, 50);
+                placementObject.fill(0xFF0000); // Opacité complète
+
+                //TODO: Add Antoine factory here !!!
+
+                placementObject = null;
+            }
+            console.log('Placement finished at:', event.global.x, event.global.y);
         }
 
         // Add btn to toolbar
@@ -153,7 +182,7 @@ onMounted(() => {
         // Ajouter un gestionnaire de touche Escape pour annuler le mode placement
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && placementMode) {
-                endPlacementMode();
+                cancelPlacementMode();
             }
         });
 
