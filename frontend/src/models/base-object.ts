@@ -1,6 +1,7 @@
 export class BaseObject {
     private _level: number;
     private _multiplicatorBonus: number;
+    static sprite: string = "";
 
     private _x: number;
     private _y: number;
