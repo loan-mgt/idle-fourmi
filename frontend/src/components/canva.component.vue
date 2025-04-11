@@ -201,6 +201,8 @@ onMounted(() => {
         app.stage.addChild(toolbar);
         app.stage.addChild(sidebar);
 
+      displayEventsInSidebar();
+
         // Ajouter un gestionnaire de touche Escape pour annuler le mode placement
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && placementMode) {
