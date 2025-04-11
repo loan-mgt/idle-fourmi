@@ -1,12 +1,12 @@
+import {BaseObject} from "@/models/item.ts";
 import type {Employee} from "@/models/employee.ts";
 
-export class Desk {
+export class Desk extends  BaseObject{
     private _employee: Employee[] = [];
     private _maxNumberEmployee: number;
 
-    private _multiplicatorBonus: number = 1;
-
     constructor(maxNumberEmployee = 1) {
+        super();
         this._maxNumberEmployee = maxNumberEmployee;
     }
 
@@ -19,12 +19,12 @@ export class Desk {
         this._employee = value;
     }
 
-    get multiplicatorBonus(): number {
-        return this._multiplicatorBonus;
+    get maxNumberEmployee(): number {
+        return this._maxNumberEmployee;
     }
 
-    set multiplicatorBonus(value: number) {
-        this._multiplicatorBonus = value;
+    set maxNumberEmployee(value: number) {
+        this._maxNumberEmployee = value;
     }
 }
 
@@ -32,6 +32,4 @@ export class MaxiDesk extends Desk {
     constructor(maxNumberEmployee = 2) {
         super(maxNumberEmployee);
     }
-
-
 }

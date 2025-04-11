@@ -1,11 +1,10 @@
+import {BaseObject} from "@/models/item.ts";
 
-export class Plant {
+export class Plant extends BaseObject {
     private _actionRadius: number = 2;
 
-    private _bonus: number;
-
-    constructor(bonus = 1.1) {
-        this._bonus = bonus;
+    constructor(_multiplicatorBonus = 1.1) {
+        super(_multiplicatorBonus);
     }
 
     get actionRadius(): number {
@@ -14,13 +13,5 @@ export class Plant {
 
     set actionRadius(value: number) {
         this._actionRadius = value;
-    }
-
-    get bonus(): number {
-        return this._bonus;
-    }
-
-    set bonus(value: number) {
-        this._bonus = value;
     }
 }

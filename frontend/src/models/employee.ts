@@ -1,10 +1,10 @@
-export class Employee {
-    private _euroPerTick: number;
-    private _level: number = 1;
+import {BaseObject} from "@/models/item.ts";
 
-    private _multiplicatorBonus: number = 1;
+export class Employee extends BaseObject{
+    private _euroPerTick: number;
 
     constructor(euroPerTick = 1) {
+        super();
         this._euroPerTick = euroPerTick;
     }
 
@@ -15,22 +15,6 @@ export class Employee {
 
     set euroPerTick(value: number) {
         this._euroPerTick = value;
-    }
-
-    get level(): number {
-        return this._level;
-    }
-
-    set level(value: number) {
-        this._level = value;
-    }
-
-    get multiplicatorBonus(): number {
-        return this._multiplicatorBonus;
-    }
-
-    set multiplicatorBonus(value: number) {
-        this._multiplicatorBonus = value;
     }
 }
 
