@@ -1,0 +1,38 @@
+import {BaseObject} from "@/models/base-object.ts";
+
+export class Employee extends BaseObject {
+    private _euroPerTick: number;
+
+    constructor(_x: number, _y: number, euroPerTick = 1) {
+        super(_x ,_y);
+        this._euroPerTick = 1;
+    }
+
+
+    get euroPerTick(): number {
+        return this._euroPerTick;
+    }
+
+    set euroPerTick(value: number) {
+        this._euroPerTick = value;
+    }
+}
+
+export class Stagiaire extends Employee {
+    constructor(_x:number,_y:number, euroPerTick = 1) {
+        super(_x ,_y, euroPerTick);
+    }
+}
+
+
+export class Alternant extends Employee {
+    constructor(_x:number,_y:number, euroPerTick = 2) {
+        super(_x ,_y, euroPerTick);
+    }
+}
+
+export class Developer extends Employee {
+    constructor(_x:number,_y:number, euroPerTick = 3) {
+        super(_x ,_y, euroPerTick);
+    }
+}
