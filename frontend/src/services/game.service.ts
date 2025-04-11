@@ -5,7 +5,7 @@ import {Plant} from "@/models/plant.js";
 
 export class GameService {
     // Static variables
-    static MONEY_AMOUNT: number = 0;
+    static MONEY_AMOUNT: number = 20;
 
     static readonly GAME_AVAILABLE_OBJECTS = [
         Desk,
