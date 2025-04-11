@@ -59,7 +59,7 @@ onMounted(() => {
         * Toolbar - now positioned at the bottom
         */
 
-        // Create a toolbar container
+        // Create a toolbar container and a sidebar container
         const toolbar = new Container();
         toolbar.x = 0;
         toolbar.y = app.screen.height - 50; // Position at bottom
@@ -69,10 +69,9 @@ onMounted(() => {
         // Make toolbar interactive
         toolbar.eventMode = 'static';
         toolbar.cursor = 'pointer';
-
         toolbar.on('pointerdown', (event) => {
-            const mousePosition = event.global;
-            console.log(`Toolbar clicked at: ${mousePosition.x}, ${mousePosition.y}`);
+          const mousePosition = event.global;
+          console.log(`Toolbar clicked at: ${mousePosition.x}, ${mousePosition.y}`);
         });
 
         // Add a visible background for the toolbar - using correct Graphics API
@@ -96,6 +95,25 @@ onMounted(() => {
         let placementMode = false;
         let placementObject = null;
         let lastKnownMousePosition = { x: 0, y: 0 };
+
+        const sidebar = new Container();
+
+        // Create a sidebar container
+        sidebar.x = app.screen.width - 200; // Position at right
+        sidebar.y = 0;
+        sidebar.width = 200;
+        sidebar.height = app.screen.height;
+
+        sidebar.eventMode = 'static';
+        sidebar.cursor = 'pointer';
+
+        const sidebarBg = new Graphics();
+        sidebarBg.rect(0, 0, 200, app.screen.height);
+        sidebarBg.fill(0x333333, 0.7);
+        sidebar.addChild(sidebarBg);
+
+
+
 
         // Écouteur pour suivre la position de la souris globalement
         app.stage.on('pointermove', (event) => {
@@ -176,8 +194,9 @@ onMounted(() => {
         // Add btn to toolbar
         toolbar.addChild(btn);
 
-        // Add toolbar to stage
+        // Add toolbar and sidebar to stage
         app.stage.addChild(toolbar);
+        app.stage.addChild(sidebar);
 
         // Ajouter un gestionnaire de touche Escape pour annuler le mode placement
         window.addEventListener('keydown', (e) => {
@@ -186,12 +205,18 @@ onMounted(() => {
             }
         });
 
-        // Handle window resize to keep toolbar at bottom
+        // Handle window resize to keep toolbar at bottom and adjust sidebar
         window.addEventListener('resize', () => {
             toolbar.y = app.screen.height - 50;
             toolbarBg.clear();
             toolbarBg.rect(0, 0, app.screen.width, 50);
             toolbarBg.fill(0x333333, 0.7);
+
+            // Mettre à jour la sidebar aussi
+            sidebar.x = app.screen.width - 200;
+            sidebarBg.clear();
+            sidebarBg.rect(0, 0, 200, app.screen.height);
+            sidebarBg.fill(0x333333, 0.7);
         });
     })();
 });
