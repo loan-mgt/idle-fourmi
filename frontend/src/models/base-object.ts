@@ -6,6 +6,13 @@ export enum TypeEnum {
 }
 
 export class BaseObject {
+    get cost(): number {
+        return this._cost;
+    }
+
+    set cost(value: number) {
+        this._cost = value;
+    }
     private _type: TypeEnum = TypeEnum.DEFAULT;
     private _level: number;
     private _multiplicatorBonus: number;
@@ -15,6 +22,7 @@ export class BaseObject {
     private _y: number;
     private _width: number;
     private _height: number;
+    private _cost: number = 5;
 
 
     constructor(_x: number, _y: number) {
