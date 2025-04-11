@@ -4,13 +4,13 @@
 
 <script setup>
 
-import {Employee} from "@/models/employee.js";
-import {Plant} from "@/models/plant.js";
-import {onMounted, ref} from 'vue';
-import {Application, Assets, Container, Graphics, Sprite, Text} from 'pixi.js';
-import {calculateTickMoney, initGame} from "@/services/game-utilities.service";
-import {GameService} from "@/services/game.service.js";
-import {Desk} from "@/models/desk.js";
+import { Employee } from "@/models/employee.js";
+import { Plant } from "@/models/plant.js";
+import { onMounted, ref } from 'vue';
+import { Application, Assets, Container, Graphics, Sprite, Text } from 'pixi.js';
+import { calculateTickMoney, initGame } from "@/services/game-utilities.service";
+import { GameService } from "@/services/game.service.js";
+import { Desk } from "@/models/desk.js";
 
 const canvasContainer = ref(null);
 
@@ -22,14 +22,34 @@ onMounted(() => {
         let selectedObjectType = null;
 
         // Initialize the application
-        await app.init({background: '#1099bb', resizeTo: window});
+        await app.init({ background: '#1099bb', resizeTo: window });
         app.stage.eventMode = 'static';
         app.stage.hitArea = app.screen;
 
+        // Top texts 
+        const gameTitle = new Text('IdleFourmi', {
+            fontSize: 30,
+            fill: 0xbb7ee0, // Couleur blanche pour le texte
+            align: 'left',
+        });
+        gameTitle.x = 10;  // Décalage horizontal
+        gameTitle.y = 10;  // Décalage vertical
+        app.stage.addChild(gameTitle);
+
+        const moneyDisplay = new Text(`Argent: ${GameService.MONEY_AMOUNT}`, {
+            fontSize: 20,
+            fill: 0x00ff00, // Couleur verte pour l'argent
+            align: 'left',
+        });
+        moneyDisplay.x = 10;  // Décalage horizontal
+        moneyDisplay.y = 50;  // Décalage vertical
+        app.stage.addChild(moneyDisplay);
+        //\\
+
         // Variables pour le zoom et le panoramique
         let isDragging = false;
-        let dragStartPosition = {x: 0, y: 0};
-        let previousPosition = {x: 0, y: 0};
+        let dragStartPosition = { x: 0, y: 0 };
+        let previousPosition = { x: 0, y: 0 };
         let zoomLevel = 1;
         const MIN_ZOOM = 0.5;
         const MAX_ZOOM = 2.0;
@@ -194,7 +214,7 @@ onMounted(() => {
         // Variables pour le mode placement style Sims
         let placementMode = false;
         let placementObject = null;
-        let lastKnownMousePosition = {x: 0, y: 0};
+        let lastKnownMousePosition = { x: 0, y: 0 };
 
         const sidebar = new Container();
 
@@ -279,7 +299,7 @@ onMounted(() => {
             if (event.data.button === 0 && !isOverUI(event.global) && !placementMode) {
                 isDragging = true;
                 dragStartPosition = event.global.clone();
-                previousPosition = {x: gridContainer.x, y: gridContainer.y};
+                previousPosition = { x: gridContainer.x, y: gridContainer.y };
                 app.canvas.style.cursor = 'grabbing';
             }
         });
@@ -298,6 +318,7 @@ onMounted(() => {
             elapsed += time.count;
             if (elapsed >= 600) {
                 GameService.MONEY_AMOUNT += calculateTickMoney();
+                moneyDisplay.text = `Argent: ${GameService.MONEY_AMOUNT}`;
                 console.log('Money avancement : ', GameService.MONEY_AMOUNT);
 
                 elapsed = 0;
