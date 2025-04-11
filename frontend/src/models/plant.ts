@@ -1,4 +1,4 @@
-import {BaseObject} from "@/models/item.ts";
+import {BaseObject} from "@/models/base-object.ts";
 
 export class Plant extends BaseObject {
     private _actionRadius: number = 2;
