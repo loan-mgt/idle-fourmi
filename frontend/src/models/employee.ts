@@ -3,9 +3,9 @@ import {BaseObject} from "@/models/base-object.ts";
 export class Employee extends BaseObject {
     private _euroPerTick: number;
 
-    constructor(euroPerTick = 1) {
-        super();
-        this._euroPerTick = euroPerTick;
+    constructor(_x: number, _y: number, euroPerTick = 1) {
+        super(_x ,_y);
+        this._euroPerTick = 1;
     }
 
 
@@ -19,20 +19,20 @@ export class Employee extends BaseObject {
 }
 
 export class Stagiaire extends Employee {
-    constructor(euroPerTick = 1) {
-        super(euroPerTick);
+    constructor(_x:number,_y:number, euroPerTick = 1) {
+        super(_x ,_y, euroPerTick);
     }
 }
 
 
 export class Alternant extends Employee {
-    constructor(euroPerTick = 2) {
-        super(euroPerTick);
+    constructor(_x:number,_y:number, euroPerTick = 2) {
+        super(_x ,_y, euroPerTick);
     }
 }
 
 export class Developer extends Employee {
-    constructor(euroPerTick = 3) {
-        super(euroPerTick);
+    constructor(_x:number,_y:number, euroPerTick = 3) {
+        super(_x ,_y, euroPerTick);
     }
 }

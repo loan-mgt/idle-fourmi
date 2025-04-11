@@ -2,16 +2,19 @@ export class BaseObject {
     private _level: number;
     private _multiplicatorBonus: number;
 
-    private _position?: Position;
+    private _x: number;
+    private _y: number;
     private _width: number;
     private _height: number;
 
 
-    constructor(_level = 1, _multiplicatorBonus = 1, _width: number = 1, _height: number = 1) {
-        this._level = _level;
-        this._multiplicatorBonus = _multiplicatorBonus;
-        this._width = _width;
-        this._height = _height;
+    constructor(_x: number, _y: number) {
+        this._level = 1;
+        this._multiplicatorBonus = 1;
+        this._width = 1;
+        this._height = 1;
+        this._x = _x;
+        this._y = _y;
     }
 
 
@@ -32,14 +35,21 @@ export class BaseObject {
     }
 
 
-    get position(): Position | undefined {
-        return this._position;
+    get x(): number {
+        return this._x;
     }
 
-    set position(value: Position | undefined) {
-        this._position = value;
+    set x(value: number) {
+        this._x = value;
     }
 
+    get y(): number {
+        return this._y;
+    }
+
+    set y(value: number) {
+        this._y = value;
+    }
 
     get width(): number {
         return this._width;
@@ -55,15 +65,5 @@ export class BaseObject {
 
     set height(value: number) {
         this._height = value;
-    }
-}
-
-export class Position {
-    x: number;
-    y: number;
-
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
     }
 }

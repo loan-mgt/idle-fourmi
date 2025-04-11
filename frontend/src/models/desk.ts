@@ -5,8 +5,8 @@ export class Desk extends BaseObject{
     private _employee: Employee[] = [];
     private _maxNumberEmployee: number;
 
-    constructor(maxNumberEmployee = 1) {
-        super();
+    constructor(_x:number,_y:number, maxNumberEmployee = 1) {
+        super(_x ,_y);
         this._maxNumberEmployee = maxNumberEmployee;
         this.width = 2;
         this.height = 1;
@@ -31,8 +31,8 @@ export class Desk extends BaseObject{
 }
 
 export class MaxiDesk extends Desk {
-    constructor(maxNumberEmployee = 2) {
-        super(maxNumberEmployee);
+    constructor(_x:number,_y:number, maxNumberEmployee = 2) {
+        super(_x ,_y, maxNumberEmployee);
         this.width = 4;
         this.height = 4;
     }
