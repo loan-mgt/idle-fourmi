@@ -345,9 +345,13 @@ onMounted(() => {
             if (!selectedObjectType) return;
 
             const startPlacement = (texture) => {
+                // Créer un objet temporaire pour récupérer ses dimensions
+                const tempObject = new selectedObjectType(0, 0);
+
                 const clonedSprite = new Sprite(texture);
-                clonedSprite.width = tileWidth;
-                clonedSprite.height = tileHeight;
+                // Ajuster la taille du sprite en fonction des dimensions de l'objet
+                clonedSprite.width = tileWidth * tempObject.width;
+                clonedSprite.height = tileHeight * tempObject.height;
                 clonedSprite.alpha = 0.7;
                 clonedSprite.eventMode = 'static';
                 clonedSprite.cursor = 'grabbing';
@@ -416,16 +420,19 @@ onMounted(() => {
                 if (gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight) {
                     // Créer l'objet final avec le bon sprite
                     const createFinalObject = (texture) => {
+                        // Créer l'instance de l'objet pour le jeu
+                        const newGameObject = new selectedObjectType(gridX, gridY);
+
                         const finalSprite = new Sprite(texture);
-                        finalSprite.width = tileWidth;
-                        finalSprite.height = tileHeight;
+                        // Ajuster la taille du sprite en fonction de l'objet
+                        finalSprite.width = tileWidth * newGameObject.width;
+                        finalSprite.height = tileHeight * newGameObject.height;
                         finalSprite.x = gridX * tileWidth;
                         finalSprite.y = gridY * tileHeight;
 
                         objectsContainer.addChild(finalSprite);
 
-                        // Créer et ajouter l'instance réelle de l'objet au jeu
-                        const newGameObject = new selectedObjectType(gridX, gridY);
+                        // Ajouter l'objet au jeu
                         GameService.GAME_OBJECTS.push(newGameObject);
                         console.log('Objet placé à la cellule:', gridX, gridY, newGameObject);
                     };

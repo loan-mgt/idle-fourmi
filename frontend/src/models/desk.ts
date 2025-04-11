@@ -6,8 +6,8 @@ export class Desk extends BaseObject {
 
     constructor(_x: number, _y: number, maxNumberEmployee = 1) {
         super(_x, _y);
-        this.width = 2;
-        this.height = 1;
+        this.width = 1;
+        this.height = 2;
         this.type = TypeEnum.DESK;
     }
 
