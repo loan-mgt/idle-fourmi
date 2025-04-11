@@ -51,6 +51,8 @@ onMounted(() => {
         app.canvas.style.width = '99%';
         app.canvas.style.height = '99%';
         canvasContainer.value.appendChild(app.canvas);
+        const objectsContainer = new Container();
+
         window.addEventListener("beforeunload", (event) => {
             // Sauvegarde ici
             localStorage.setItem("MONEY_AMOUNT", GameService.MONEY_AMOUNT.toString());
@@ -110,10 +112,16 @@ onMounted(() => {
             gridContainer.x = (app.screen.width - gridWidth * tileWidth * zoomLevel) / 2;
             gridContainer.y = (app.screen.height - gridHeight * tileHeight * zoomLevel) / 2;
             gridContainer.scale.set(zoomLevel);
+
+            // Synchroniser le conteneur d'objets avec la grille
+            objectsContainer.x = gridContainer.x;
+            objectsContainer.y = gridContainer.y;
+            objectsContainer.scale.set(zoomLevel);
         }
 
         // Positionner la grille initialement
         updateGridPosition();
+
 
         /*
         * Toolbar - now positioned at the bottom
@@ -213,6 +221,10 @@ onMounted(() => {
 
                 gridContainer.x = previousPosition.x + dx;
                 gridContainer.y = previousPosition.y + dy;
+
+                // Synchroniser le conteneur d'objets
+                objectsContainer.x = gridContainer.x;
+                objectsContainer.y = gridContainer.y;
             }
         });
 
@@ -254,6 +266,9 @@ onMounted(() => {
 
                 gridContainer.x = lastKnownMousePosition.x - mousePositionRelativeToGrid.x * zoomLevel;
                 gridContainer.y = lastKnownMousePosition.y - mousePositionRelativeToGrid.y * zoomLevel;
+                objectsContainer.scale.set(zoomLevel);
+                objectsContainer.x = gridContainer.x;
+                objectsContainer.y = gridContainer.y;
             }
         });
 
@@ -347,24 +362,46 @@ onMounted(() => {
 
             // else finish placement mode
             placementMode = false;
-            if (placementObject) {
-                placementObject.onpointerdown = null; // Remove the pointerdown event
-                placementObject.cursor = 'pointer'; // Change cursor back to pointer
-                placementObject.interactive = false; // Make it non-interactive
-                placementObject.clear();
-                placementObject.rect(0, 0, 50, 50);
-                placementObject.fill(0xFF0000); // Opacité complète
+          if (placementObject) {
+            // Convertir les coordonnées globales en coordonnées relatives à la grille
+            const localPos = {
+              x: (event.global.x - gridContainer.x) / zoomLevel,
+              y: (event.global.y - gridContainer.y) / zoomLevel
+            };
 
-                //TODO: Add Antoine factory here !!!
+            // Calculer la position de la cellule la plus proche
+            const gridX = Math.floor(localPos.x / tileWidth);
+            const gridY = Math.floor(localPos.y / tileHeight);
 
-                placementObject = null;
+            // Vérifier si la position est dans les limites de la grille
+            if (gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight) {
+              // Créer l'objet final aligné sur la grille
+              const finalObject = new Graphics();
+              finalObject.rect(0, 0, tileWidth, tileHeight);
+              finalObject.fill(0xFF0000);
+
+              // Positionner l'objet sur la cellule de la grille (en coordonnées de grille, pas globales)
+              finalObject.x = gridX * tileWidth;
+              finalObject.y = gridY * tileHeight;
+
+              // Ajouter l'objet au conteneur d'objets plutôt qu'à la scène directement
+              objectsContainer.addChild(finalObject);
+
+              //TODO: Add Antoine factory here !!!
+              console.log('Objet placé à la cellule:', gridX, gridY);
             }
+
+            // Nettoyer l'objet de placement temporaire
+            app.stage.removeChild(placementObject);
+            placementObject = null;
+          }
             console.log('Placement finished at:', event.global.x, event.global.y);
         }
 
         // Add toolbar and sidebar to stage
         app.stage.addChild(toolbar);
         app.stage.addChild(sidebar);
+        app.stage.addChild(objectsContainer);
 
         displayEventsInSidebar();
 
