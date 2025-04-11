@@ -46,17 +46,17 @@ export function calculateTickMoney(): number {
 }
 
 export function checkDeskPlant(desk: Desk): Plant | undefined {
-    GameService.GAME_OBJECTS.forEach(object => {
+    for (let object of GameService.GAME_OBJECTS) {
         if (object.type === TypeEnum.PLANT) {
             const plant = object as Plant;
             const x = desk.x;
             const y = desk.y;
             if (((plant.x - plant.actionRadius) <= x && x < (plant.x + plant.width + plant.actionRadius) &&
                 ((plant.y - plant.actionRadius) <= y && y < (plant.y + plant.height + plant.actionRadius)))) {
-                return object;
+                return plant;
             }
         }
-    });
+    }
     return undefined;
 }
 

@@ -91,7 +91,7 @@ onMounted(() => {
         }
 
         if (GameService.GAME_OBJECTS && !GameService.GAME_OBJECTS.length) {
-            initGame()
+            // initGame()
         }
 
         // Append the application canvas to the container
