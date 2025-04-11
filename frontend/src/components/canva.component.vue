@@ -150,7 +150,21 @@ onMounted(() => {
             let widthOffset = i * 5;
 
             btn.rect(widthOffset, 0, width, height);
-            btn.fill(0xFF0000);
+
+            if (changethis[i].sprite == '') {
+                console.warn('No sprite for this object, using default sprite');
+                btn.fill(0xFF0000);
+            } else {
+                console.log('Loading sprite for this object: ', changethis[i].sprite);
+                Assets.load(changethis[i].sprite).then(texture => {
+                    console.log('Sprite loaded: ', texture);
+                    const sprite = new Sprite(texture);
+                    sprite.width = 50;
+                    sprite.height = 50;
+                    btn.addChild(sprite);
+                });
+            }
+
             btn.x = i * 60 + 10;
             btn.y = 0;
 
