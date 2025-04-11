@@ -4,9 +4,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { Application, Assets, Sprite, Container, Graphics } from 'pixi.js';
+import { Application, Assets, Sprite, Container, Graphics, Text } from 'pixi.js';
+import { GameService } from '@/services/game.service.js';
 
 const canvasContainer = ref(null);
+
+
 
 onMounted(() => {
     (async () => {
@@ -217,8 +220,79 @@ onMounted(() => {
             sidebarBg.clear();
             sidebarBg.rect(0, 0, 200, app.screen.height);
             sidebarBg.fill(0x333333, 0.7);
+
+          displayEventsInSidebar();
         });
+
+
+      function displayEventsInSidebar() {
+        // Supprimer tous les enfants de la sidebar sauf le fond
+        while (sidebar.children.length > 1) {
+          sidebar.removeChildAt(1);
+        }
+
+        // Ajouter chaque événement à la sidebar
+        GameService.GAME_BUFF.forEach((event, index) => {
+          // Créer un conteneur pour l'événement
+          const eventContainer = new Container();
+          eventContainer.x = 10;
+          eventContainer.y = 10 + index * 70;
+          eventContainer.eventMode = 'static';
+          eventContainer.cursor = 'pointer';
+
+          // Ajouter un fond pour l'événement
+          const eventBg = new Graphics();
+          eventBg.rect(0, 0, 180, 60);
+          eventBg.fill(0x555555);
+          eventContainer.addChild(eventBg);
+
+          // Chargement de l'image
+          Assets.load(event.imageUrl).then(texture => {
+            const eventImage = new Sprite(texture);
+            eventImage.scale.set(0.4);
+            eventImage.x = 5;
+            eventImage.y = 5;
+            eventContainer.addChild(eventImage);
+          });
+
+          // Ajouter le texte du titre
+          const title = new Text(event.title, {
+            fontSize: 14,
+            fill: 0xffffff,
+          });
+          title.x = 60;
+          title.y = 10;
+          eventContainer.addChild(title);
+
+          // Ajouter le tooltip comme texte plus petit
+          const tooltip = new Text(event.tooltip, {
+            fontSize: 10,
+            fill: 0xcccccc,
+          });
+          tooltip.x = 60;
+          tooltip.y = 30;
+          eventContainer.addChild(tooltip);
+
+          // Gérer le clic sur l'événement
+          eventContainer.on('pointerdown', () => {
+            console.log('Événement cliqué:', event);
+            // Supprimer l'événement de la liste
+            const index = GameService.GAME_BUFF.findIndex(e => e.id === event.id);
+            if (index !== -1) {
+              GameService.GAME_BUFF.splice(index, 1);
+              // Rafraîchir l'affichage
+              displayEventsInSidebar();
+            }
+          });
+
+          sidebar.addChild(eventContainer);
+        });
+      }
+
+
     })();
+
+
 });
 </script>
 
