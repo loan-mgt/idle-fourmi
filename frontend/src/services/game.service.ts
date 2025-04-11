@@ -1,8 +1,17 @@
 import {BaseObject} from "@/models/base-object";
+import {Desk} from "@/models/desk.ts";
+import {Employee} from "@/models/employee.js";
+import {Plant} from "@/models/plant.js";
 
 export class GameService {
     // Static variables
     static MONEY_AMOUNT: number = 0;
+
+    static readonly GAME_AVAILABLE_OBJECTS = [
+        Desk,
+        Employee,
+        Plant
+    ];
 
     static readonly GAME_OBJECTS: BaseObject[] = [];
 
