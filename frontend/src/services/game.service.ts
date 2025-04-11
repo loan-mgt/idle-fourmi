@@ -2,7 +2,7 @@ import {BaseObject} from "@/models/base-object";
 
 export class GameService {
     // Static variables
-    static readonly MONEY_AMOUNT: number = 0;
+    static MONEY_AMOUNT: number = 0;
 
     static readonly GAME_OBJECTS: BaseObject[] = [];
 

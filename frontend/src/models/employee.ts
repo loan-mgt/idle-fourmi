@@ -5,7 +5,7 @@ export class Employee extends BaseObject {
 
     constructor(_x: number, _y: number, euroPerTick = 1) {
         super(_x ,_y);
-        this._euroPerTick = 1;
+        this._euroPerTick = euroPerTick;
     }
 
 

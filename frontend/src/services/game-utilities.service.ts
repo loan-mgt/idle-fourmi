@@ -19,6 +19,7 @@ export function getObjectAtPosition(x: number, y: number): BaseObject | undefine
 export function calculateTickMoney(): number {
     let moneyToAdd: number = 0;
 
+
     GameService.GAME_OBJECTS.forEach(object => {
         // On prend les bureaux
 
