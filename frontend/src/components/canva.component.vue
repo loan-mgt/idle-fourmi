@@ -15,6 +15,17 @@ onMounted(() => {
 
         // Initialize the application
         await app.init({ background: '#1099bb', resizeTo: window });
+        app.stage.eventMode = 'static';
+        app.stage.hitArea = app.screen;
+
+        window.addEventListener('resize', () => {
+            toolbar.y = app.screen.height - 50;
+            toolbarBg.clear();
+            toolbarBg.rect(0, 0, app.screen.width, 50);
+            toolbarBg.fill(0x333333, 0.7);
+
+            app.stage.hitArea = app.screen; // maj du hitArea aussi !
+        });
 
         // Append the application canvas to the container
         app.canvas.className = 'pixi-canvas';
@@ -99,10 +110,44 @@ onMounted(() => {
 
         // Associer l'activation du mode placement au clic sur le bouton
         btn.on('pointerdown', (event) => {
-            console.log(`Button clicked!`);
+            placementMode = true;
             startPlacementMode(event);
-            event.stopPropagation();
         });
+
+        // Écouteur pour suivre la position de la souris globalement
+        app.stage.on('pointermove', (event) => {
+            lastKnownMousePosition = event.global.clone();
+        });
+
+        // Fonction pour activer le mode placement
+        function startPlacementMode(initialEvent) {
+            const clonedBtn = new Graphics();
+            clonedBtn.rect(0, 0, 50, 50);
+            clonedBtn.fill(0xFF0000, 0.5); // Rouge avec transparence
+            clonedBtn.eventMode = 'static';
+            clonedBtn.cursor = 'grabbing';
+
+            clonedBtn.x = initialEvent.global.x - 25;
+            clonedBtn.y = initialEvent.global.y - 25;
+
+            placementObject = clonedBtn;
+            app.stage.addChild(clonedBtn);
+        }
+
+        app.ticker.add(() => {
+            if (placementMode && placementObject) {
+                placementObject.x = lastKnownMousePosition.x - placementObject.width / 2;
+                placementObject.y = lastKnownMousePosition.y - placementObject.height / 2;
+            }
+        });
+
+        function endPlacementMode() {
+            placementMode = false;
+            if (placementObject) {
+                app.stage.removeChild(placementObject);
+                placementObject = null;
+            }
+        }
 
         // Add btn to toolbar
         toolbar.addChild(btn);
