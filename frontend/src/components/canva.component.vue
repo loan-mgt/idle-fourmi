@@ -84,7 +84,7 @@ onMounted(() => {
         const oldMoney = localStorage.getItem("MONEY_AMOUNT");
         if (oldMoney) {
             if (isNaN(Number(oldMoney))) {
-                GameService.MONEY_AMOUNT = 0;
+                GameService.MONEY_AMOUNT = 20;
             }
             else {
                 GameService.MONEY_AMOUNT = Number(oldMoney)
