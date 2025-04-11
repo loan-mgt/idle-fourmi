@@ -8,7 +8,7 @@ import { Employee } from "@/models/employee.js";
 import { Plant } from "@/models/plant.js";
 import { onMounted, ref } from 'vue';
 import { Application, Assets, Container, Graphics, Sprite, Text } from 'pixi.js';
-import { calculateTickMoney, initGame } from "@/services/game-utilities.service";
+import {calculateTickMoney, initGame, loadSave} from "@/services/game-utilities.service";
 import { GameService } from "@/services/game.service.js";
 import { Desk } from "@/models/desk.js";
 
@@ -87,9 +87,7 @@ onMounted(() => {
         }
         const oldObjects = localStorage.getItem("GAME_OBJECTS");
         if (oldObjects) {
-            debugger;
-            JSON.parse(oldObjects);
-            GameService.GAME_OBJECTS.push(...JSON.parse(oldObjects));
+            //loadSave(JSON.parse(oldObjects));
         }
 
         if (GameService.GAME_OBJECTS && !GameService.GAME_OBJECTS.length) {

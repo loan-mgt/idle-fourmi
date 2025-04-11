@@ -66,6 +66,8 @@ export function initGame(): void {
     GameService.GAME_OBJECTS.push(bureau);
 }
 
-export function loadSave(): void {
-
+export function loadSave(saved: {}): void {
+    // saved.forEach(item => {
+    //     if (item._type
+    // });
 }
