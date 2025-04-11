@@ -3,9 +3,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { Application, Assets, Sprite, Container, Graphics, Text } from 'pixi.js';
-import { GameService } from '@/services/game.service.js';
+import {ref, onMounted} from 'vue';
+import {Application, Assets, Sprite, Container, Graphics, Text} from 'pixi.js';
+import {calculateTickMoney} from "@/services/game-utilities.service";
+import {GameService} from "@/services/game.service.js";
+import {Desk} from "@/models/desk.js";
+import {Developer} from "@/models/employee.js";
 
 const canvasContainer = ref(null);
 
@@ -212,6 +215,32 @@ onMounted(() => {
         app.canvas.style.cursor = 'default';
       }
     });
+
+        // For Money calculation
+        const bureau = new Desk(1, 1);
+        bureau.employees.push(new Developer(1, 1));
+
+        GameService.GAME_OBJECTS.push(bureau);
+
+        let elapsed = 0;
+        app.ticker.add((time) => {
+            elapsed += time.count;
+            if (elapsed >= 600) {
+                GameService.MONEY_AMOUNT += calculateTickMoney();
+                console.log('Money avancement : ', GameService.MONEY_AMOUNT);
+
+                elapsed = 0;
+            }
+        });
+
+
+        function cancelPlacementMode() {
+            placementMode = false;
+            if (placementObject) {
+                app.stage.removeChild(placementObject);
+                placementObject = null;
+            }
+        }
 
     app.stage.on('pointerupoutside', () => {
       if (isDragging) {

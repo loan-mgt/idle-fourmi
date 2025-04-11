@@ -1,8 +1,8 @@
-import type {BaseObject} from "@/models/base-object.ts";
-import {GameService} from "@/services/game.service.ts";
-import {Desk} from "@/models/desk.ts";
-import type {Employee} from "@/models/employee.ts";
-import {Plant} from "@/models/plant.ts";
+import {GameService} from "@/services/game.service";
+import {Desk} from "@/models/desk";
+import {Employee} from "@/models/employee";
+import {BaseObject} from "@/models/base-object";
+import {Plant} from "@/models/plant";
 
 
 export function getObjectAtPosition(x: number, y: number): BaseObject | undefined {
@@ -18,6 +18,7 @@ export function getObjectAtPosition(x: number, y: number): BaseObject | undefine
 
 export function calculateTickMoney(): number {
     let moneyToAdd: number = 0;
+
 
     GameService.GAME_OBJECTS.forEach(object => {
         // On prend les bureaux

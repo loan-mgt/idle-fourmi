@@ -1,11 +1,11 @@
-import {BaseObject} from "@/models/base-object.ts";
+import {BaseObject} from "@/models/base-object";
 
 export class Employee extends BaseObject {
     private _euroPerTick: number;
 
     constructor(_x: number, _y: number, euroPerTick = 1) {
         super(_x ,_y);
-        this._euroPerTick = 1;
+        this._euroPerTick = euroPerTick;
     }
 
 
