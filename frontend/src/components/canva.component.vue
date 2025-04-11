@@ -6,8 +6,8 @@
 
 import {Employee} from "@/models/employee.js";
 import {Plant} from "@/models/plant.js";
-import {ref, onMounted} from 'vue';
-import {Application, Assets, Sprite, Container, Graphics, Text} from 'pixi.js';
+import {onMounted, ref} from 'vue';
+import {Application, Assets, Container, Graphics, Sprite, Text} from 'pixi.js';
 import {calculateTickMoney, initGame} from "@/services/game-utilities.service";
 import {GameService} from "@/services/game.service.js";
 import {Desk} from "@/models/desk.js";
@@ -19,6 +19,7 @@ onMounted(() => {
     (async () => {
         // Create a new application
         const app = new Application();
+        let selectedObjectType = null;
 
         // Initialize the application
         await app.init({background: '#1099bb', resizeTo: window});
@@ -154,17 +155,18 @@ onMounted(() => {
             const btn = new Graphics();
             let width = 50;
             let height = 50;
-
             let widthOffset = i * 5;
 
             btn.rect(widthOffset, 0, width, height);
 
-            if (changethis[i].sprite == '') {
+            const objectType = changethis[i];
+
+            if (objectType.sprite == '') {
                 console.warn('No sprite for this object, using default sprite');
                 btn.fill(0xFF0000);
             } else {
-                console.log('Loading sprite for this object: ', changethis[i].sprite);
-                Assets.load(changethis[i].sprite).then(texture => {
+                console.log('Loading sprite for this object: ', objectType.sprite);
+                Assets.load(objectType.sprite).then(texture => {
                     console.log('Sprite loaded: ', texture);
                     const sprite = new Sprite(texture);
                     sprite.width = 50;
@@ -176,17 +178,17 @@ onMounted(() => {
             btn.x = i * 60 + 10;
             btn.y = 0;
 
-            // Make button interactive
             btn.eventMode = 'static';
             btn.cursor = 'pointer';
 
-            // Associer l'activation du mode placement au clic sur le bouton
+            // Stocker le type d'objet lors du clic
             btn.on('pointerdown', (event) => {
+                selectedObjectType = objectType;
                 placementMode = true;
                 startPlacementMode(event);
             });
 
-            toolbar.addChild(btn);  // Déplacer cette ligne ici à l'intérieur de la boucle
+            toolbar.addChild(btn);
         }
 
         // Variables pour le mode placement style Sims
@@ -320,22 +322,44 @@ onMounted(() => {
 
         // Fonction pour activer le mode placement
         function startPlacementMode(initialEvent) {
-            const clonedBtn = new Graphics();
-            clonedBtn.rect(0, 0, 50, 50);
-            clonedBtn.fill(0xFF0000, 0.5); // Rouge avec transparence
-            clonedBtn.eventMode = 'static';
-            clonedBtn.cursor = 'grabbing';
+            if (!selectedObjectType) return;
 
-            clonedBtn.x = initialEvent.global.x - 25;
-            clonedBtn.y = initialEvent.global.y - 25;
+            const startPlacement = (texture) => {
+                const clonedSprite = new Sprite(texture);
+                clonedSprite.width = tileWidth;
+                clonedSprite.height = tileHeight;
+                clonedSprite.alpha = 0.7;
+                clonedSprite.eventMode = 'static';
+                clonedSprite.cursor = 'grabbing';
 
-            clonedBtn.onpointerdown = (event) => {
-                // Si le bouton est cliqué, on annule le mode placement
-                finishPlacementMode(event);
+                clonedSprite.x = initialEvent.global.x - clonedSprite.width / 2;
+                clonedSprite.y = initialEvent.global.y - clonedSprite.height / 2;
+
+                clonedSprite.onpointerdown = (event) => {
+                    finishPlacementMode(event);
+                };
+
+                placementObject = clonedSprite;
+                app.stage.addChild(clonedSprite);
             };
 
-            placementObject = clonedBtn;
-            app.stage.addChild(clonedBtn);
+            if (selectedObjectType.sprite && selectedObjectType.sprite !== '') {
+                Assets.load(selectedObjectType.sprite).then(texture => {
+                    startPlacement(texture);
+                }).catch(err => {
+                    // Fallback à un rectangle rouge en cas d'erreur
+                    const fallbackGraphic = new Graphics();
+                    fallbackGraphic.rect(0, 0, tileWidth, tileHeight);
+                    fallbackGraphic.fill(0xFF0000, 0.5);
+                    startPlacement(fallbackGraphic.generateCanvasTexture());
+                });
+            } else {
+                // Fallback si pas de sprite défini
+                const fallbackGraphic = new Graphics();
+                fallbackGraphic.rect(0, 0, tileWidth, tileHeight);
+                fallbackGraphic.fill(0xFF0000, 0.5);
+                startPlacement(fallbackGraphic.generateCanvasTexture());
+            }
         }
 
         app.ticker.add(() => {
@@ -354,48 +378,58 @@ onMounted(() => {
         }
 
         function finishPlacementMode(event) {
-            //if right click, cancel placement mode
             if (event.data.button === 2) {
                 cancelPlacementMode();
                 return;
             }
 
-            // else finish placement mode
             placementMode = false;
-          if (placementObject) {
-            // Convertir les coordonnées globales en coordonnées relatives à la grille
-            const localPos = {
-              x: (event.global.x - gridContainer.x) / zoomLevel,
-              y: (event.global.y - gridContainer.y) / zoomLevel
-            };
+            if (placementObject && selectedObjectType) {
+                const localPos = {
+                    x: (event.global.x - gridContainer.x) / zoomLevel,
+                    y: (event.global.y - gridContainer.y) / zoomLevel
+                };
 
-            // Calculer la position de la cellule la plus proche
-            const gridX = Math.floor(localPos.x / tileWidth);
-            const gridY = Math.floor(localPos.y / tileHeight);
+                const gridX = Math.floor(localPos.x / tileWidth);
+                const gridY = Math.floor(localPos.y / tileHeight);
 
-            // Vérifier si la position est dans les limites de la grille
-            if (gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight) {
-              // Créer l'objet final aligné sur la grille
-              const finalObject = new Graphics();
-              finalObject.rect(0, 0, tileWidth, tileHeight);
-              finalObject.fill(0xFF0000);
+                if (gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight) {
+                    // Créer l'objet final avec le bon sprite
+                    const createFinalObject = (texture) => {
+                        const finalSprite = new Sprite(texture);
+                        finalSprite.width = tileWidth;
+                        finalSprite.height = tileHeight;
+                        finalSprite.x = gridX * tileWidth;
+                        finalSprite.y = gridY * tileHeight;
 
-              // Positionner l'objet sur la cellule de la grille (en coordonnées de grille, pas globales)
-              finalObject.x = gridX * tileWidth;
-              finalObject.y = gridY * tileHeight;
+                        objectsContainer.addChild(finalSprite);
 
-              // Ajouter l'objet au conteneur d'objets plutôt qu'à la scène directement
-              objectsContainer.addChild(finalObject);
+                        // Créer et ajouter l'instance réelle de l'objet au jeu
+                        const newGameObject = new selectedObjectType(gridX, gridY);
+                        GameService.GAME_OBJECTS.push(newGameObject);
+                        console.log('Objet placé à la cellule:', gridX, gridY, newGameObject);
+                    };
 
-              //TODO: Add Antoine factory here !!!
-              console.log('Objet placé à la cellule:', gridX, gridY);
+                    if (selectedObjectType.sprite && selectedObjectType.sprite !== '') {
+                        Assets.load(selectedObjectType.sprite).then(texture => {
+                            createFinalObject(texture);
+                        }).catch(err => {
+                            const fallbackGraphic = new Graphics();
+                            fallbackGraphic.rect(0, 0, tileWidth, tileHeight);
+                            fallbackGraphic.fill(0xFF0000);
+                            createFinalObject(fallbackGraphic.generateCanvasTexture());
+                        });
+                    } else {
+                        const fallbackGraphic = new Graphics();
+                        fallbackGraphic.rect(0, 0, tileWidth, tileHeight);
+                        fallbackGraphic.fill(0xFF0000);
+                        createFinalObject(fallbackGraphic.generateCanvasTexture());
+                    }
+                }
+
+                app.stage.removeChild(placementObject);
+                placementObject = null;
             }
-
-            // Nettoyer l'objet de placement temporaire
-            app.stage.removeChild(placementObject);
-            placementObject = null;
-          }
-            console.log('Placement finished at:', event.global.x, event.global.y);
         }
 
         // Add toolbar and sidebar to stage
