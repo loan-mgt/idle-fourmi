@@ -6,6 +6,7 @@
 import { ref, onMounted } from 'vue';
 import { Application, Assets, Sprite, Container, Graphics, Text } from 'pixi.js';
 import { GameService } from '@/services/game.service.js';
+import {calculateTickMoney, GameService} from "@/services/game-utilities.service";
 
 const canvasContainer = ref(null);
 
@@ -212,6 +213,24 @@ onMounted(() => {
         app.canvas.style.cursor = 'default';
       }
     });
+
+
+        // For Money calculation
+        app.ticker.add((time) => {
+            calculateTickMoney();
+
+            console.log('Money avancement : ', GameService.MONEY_AMOUNT);
+        });
+
+
+
+        function cancelPlacementMode() {
+            placementMode = false;
+            if (placementObject) {
+                app.stage.removeChild(placementObject);
+                placementObject = null;
+            }
+        }
 
     app.stage.on('pointerupoutside', () => {
       if (isDragging) {

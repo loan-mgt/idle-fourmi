@@ -1,4 +1,4 @@
-import {BaseObject} from "@/models/base-object.ts";
+import {BaseObject} from "@/models/base-object";
 
 export class Employee extends BaseObject {
     private _euroPerTick: number;

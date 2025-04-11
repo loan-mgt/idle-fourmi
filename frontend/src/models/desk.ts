@@ -1,5 +1,5 @@
-import {BaseObject} from "@/models/base-object.ts";
-import type {Employee} from "@/models/employee.ts";
+import {BaseObject} from "@/models/base-object";
+import {Employee} from "@/models/employee";
 
 export class Desk extends BaseObject{
     private _employees: Employee[] = [];
