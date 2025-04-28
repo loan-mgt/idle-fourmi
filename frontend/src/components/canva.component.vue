@@ -21,6 +21,27 @@ function createFallbackTexture(width, height, alpha = 1) {
     return fallbackGraphic.generateCanvasTexture();
 }
 
+// Helper to create a sidebar (generalized)
+function createSidebar({ x, y, width, height, populateContent }) {
+    const sidebar = new Container();
+    sidebar.x = x;
+    sidebar.y = y;
+    sidebar.width = width;
+    sidebar.height = height;
+    sidebar.eventMode = 'static';
+    sidebar.cursor = 'pointer';
+
+    const sidebarBg = new Graphics();
+    sidebarBg.rect(0, 0, width, height);
+    sidebarBg.fill({ color: 0x333333, alpha: 0.7 });
+    sidebar.addChild(sidebarBg);
+
+    if (populateContent) {
+        populateContent(sidebar);
+    }
+    return { sidebar, sidebarBg };
+}
+
 onMounted(() => {
     (async () => {
         const app = new Application();
@@ -139,85 +160,142 @@ onMounted(() => {
         * Toolbar - now positioned at the bottom
         */
 
-        // Create a toolbar container and a sidebar container
-        const toolbar = new Container();
-        toolbar.x = 0;
-        toolbar.y = app.screen.height - 50; // Position at bottom
-        toolbar.width = app.screen.width;
-        toolbar.height = 50;
-
         // Make toolbar interactive
-        toolbar.eventMode = 'static';
-        toolbar.cursor = 'pointer';
-        toolbar.on('pointerdown', (event) => {
-            const mousePosition = event.global;
-            console.log(`Toolbar clicked at: ${mousePosition.x}, ${mousePosition.y}`);
-        });
-
         // Add a visible background for the toolbar - using correct Graphics API
         const toolbarBg = new Graphics();
         toolbarBg.rect(0, 0, app.screen.width, 50);
         toolbarBg.fill({ color: 0x333333, alpha: 0.7 });
-        toolbar.addChild(toolbarBg);
+        toolbarBg.y = app.screen.height - 50; // Ensure it is at the bottom
+        app.stage.addChild(toolbarBg);
 
-        // Add a button to the toolbar - using correct Graphics API
-        let objectTypes = [Desk, Employee, Plant];
-        for (let i = 0; i < objectTypes.length; i++) {
-            // Create a container for the button
-            const btnContainer = new Container();
-            btnContainer.x = i * 60 + 10;
-            btnContainer.y = 0;
-            btnContainer.width = 50;
-            btnContainer.height = 50;
-            btnContainer.eventMode = 'static';
-            btnContainer.cursor = 'pointer';
+        // --- Bottom Bar: Item Placement ---
+        function populateBottomBar(toolbarContainer) {
+            let objectTypes = [Desk, Employee, Plant];
+            for (let i = 0; i < objectTypes.length; i++) {
+                const btnContainer = new Container();
+                btnContainer.x = 20 + i * 70;
+                btnContainer.y = 5;
+                btnContainer.width = 60;
+                btnContainer.height = 40;
+                btnContainer.eventMode = 'static';
+                btnContainer.cursor = 'pointer';
 
-            // Create the button background
-            const btnBg = new Graphics();
-            let width = 50;
-            let height = 50;
-            let widthOffset = i * 5;
-            btnBg.rect(widthOffset, 0, width, height);
-            const objectType = objectTypes[i];
-            if (!objectType.sprite) {
-                btnBg.fill({ color: 0xFF0000 });
-            }
-            btnContainer.addChild(btnBg);
+                const btnBg = new Graphics();
+                btnBg.rect(0, 0, 60, 40);
+                btnBg.fill({ color: 0x444444 });
+                btnContainer.addChild(btnBg);
 
-            // Add the sprite if available
-            if (objectType.sprite) {
-                Assets.load(objectType.sprite).then(texture => {
-                    const sprite = new Sprite(texture);
-                    sprite.width = 50;
-                    sprite.height = 50;
-                    btnContainer.addChild(sprite);
+                const objectType = objectTypes[i];
+                if (objectType.sprite) {
+                    Assets.load(objectType.sprite).then(texture => {
+                        const sprite = new Sprite(texture);
+                        sprite.width = 36;
+                        sprite.height = 36;
+                        sprite.x = 12;
+                        sprite.y = 2;
+                        btnContainer.addChild(sprite);
+                    });
+                } else {
+                    // fallback visual
+                    btnBg.fill({ color: 0xFF0000 });
+                }
+
+                btnContainer.on('pointerdown', (event) => {
+                    selectedObjectType = objectType;
+                    placementMode = true;
+                    startPlacementMode(event);
                 });
+                toolbarContainer.addChild(btnContainer);
             }
-
-            // Stocker le type d'objet lors du clic
-            btnContainer.on('pointerdown', (event) => {
-                selectedObjectType = objectType;
-                placementMode = true;
-                startPlacementMode(event);
-            });
-
-            toolbar.addChild(btnContainer);
         }
 
-        // Sidebar
-        const sidebar = new Container();
-        sidebar.x = app.screen.width - 200; // Position at right
-        sidebar.y = 0;
-        sidebar.width = 200;
-        sidebar.height = app.screen.height;
+        // --- Right Sidebar: Events ---
+        function populateRightSidebar(sidebar) {
+            GameService.GAME_BUFF.forEach((event, index) => {
+                // Créer un conteneur pour l'événement
+                const eventContainer = new Container();
+                eventContainer.x = 10;
+                eventContainer.y = 10 + index * 70;
+                eventContainer.eventMode = 'static';
+                eventContainer.cursor = 'pointer';
 
-        sidebar.eventMode = 'static';
-        sidebar.cursor = 'pointer';
+                // Ajouter un fond pour l'événement
+                const eventBg = new Graphics();
+                eventBg.rect(0, 0, 180, 60);
+                eventBg.fill({ color: 0x555555 });
+                eventContainer.addChild(eventBg);
 
-        const sidebarBg = new Graphics();
-        sidebarBg.rect(0, 0, 200, app.screen.height);
-        sidebarBg.fill({ color: 0x333333, alpha: 0.7 });
-        sidebar.addChild(sidebarBg);
+                // Chargement de l'image
+                Assets.load(event.imageUrl).then(texture => {
+                    const eventImage = new Sprite(texture);
+                    eventImage.scale.set(0.4);
+                    eventImage.x = 5;
+                    eventImage.y = 5;
+                    eventContainer.addChild(eventImage);
+                });
+
+                // Ajouter le texte du titre
+                const title = new Text({
+                    text: event.title,
+                    style: {
+                        fontSize: 14,
+                        fill: 0xffffff,
+                    }
+                });
+                title.x = 60;
+                title.y = 10;
+                eventContainer.addChild(title);
+
+                // Ajouter le tooltip comme texte plus petit
+                const tooltip = new Text({
+                    text: event.tooltip,
+                    style: {
+                        fontSize: 10,
+                        fill: 0xcccccc,
+                    }
+                });
+                tooltip.x = 60;
+                tooltip.y = 30;
+                eventContainer.addChild(tooltip);
+
+                // Gérer le clic sur l'événement
+                eventContainer.on('pointerdown', () => {
+                    console.log('Événement cliqué:', event);
+                    // Supprimer l'événement de la liste
+                    const index = GameService.GAME_BUFF.findIndex(e => e.id === event.id);
+                    if (index !== -1) {
+                        GameService.GAME_BUFF.splice(index, 1);
+                        // Rafraîchir l'affichage
+                        displayEventsInSidebar();
+                    }
+                });
+
+                sidebar.addChild(eventContainer);
+            });
+        }
+
+        // Only create right sidebar for events
+        const { sidebar: rightSidebar, sidebarBg: rightSidebarBg } = createSidebar({
+            x: app.screen.width - 200,
+            y: 0,
+            width: 200,
+            height: app.screen.height,
+            populateContent: populateRightSidebar
+        });
+        app.stage.addChild(rightSidebar);
+
+        // Create toolbar container for bottom bar
+        const toolbarContainer = new Container();
+        toolbarContainer.x = 0;
+        toolbarContainer.y = app.screen.height - 50;
+        toolbarContainer.width = app.screen.width;
+        toolbarContainer.height = 50;
+        toolbarContainer.eventMode = 'static';
+        toolbarContainer.cursor = 'pointer';
+        populateBottomBar(toolbarContainer);
+        app.stage.addChild(toolbarBg);
+        app.stage.addChild(toolbarContainer);
+        app.stage.addChild(objectsContainer);
 
         // Écouteur pour suivre la position de la souris globalement
         app.stage.on('pointermove', (event) => {
@@ -240,12 +318,8 @@ onMounted(() => {
         // Fonction pour vérifier si la souris est au-dessus d'un élément d'interface
         function isOverUI(position) {
             return (
-                // Sur la sidebar
-                position.x >= sidebar.x && position.x <= sidebar.x + sidebar.width &&
-                position.y >= sidebar.y && position.y <= sidebar.y + sidebar.height ||
-                // Sur la toolbar
-                position.x >= toolbar.x && position.x <= toolbar.x + toolbar.width &&
-                position.y >= toolbar.y && position.y <= toolbar.y + toolbar.height
+                position.x >= rightSidebar.x && position.x <= rightSidebar.x + rightSidebar.width &&
+                position.y >= rightSidebar.y && position.y <= rightSidebar.y + rightSidebar.height
             );
         }
 
@@ -451,41 +525,30 @@ onMounted(() => {
             }
         }
 
-        // Add toolbar and sidebar to stage
-        app.stage.addChild(toolbar);
-        app.stage.addChild(sidebar);
-        app.stage.addChild(objectsContainer);
-
-        displayEventsInSidebar();
-
-        // Ajouter un gestionnaire de touche Escape pour annuler le mode placement
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && placementMode) {
-                cancelPlacementMode();
-            }
-        });
-
-        // Handle window resize to keep toolbar at bottom and adjust sidebar
+        // Update on resize
         window.addEventListener('resize', () => {
-            toolbar.y = app.screen.height - 50;
+            rightSidebar.x = app.screen.width - 200;
+            rightSidebar.height = app.screen.height;
+            rightSidebarBg.clear();
+            rightSidebarBg.rect(0, 0, 200, app.screen.height);
+            rightSidebarBg.fill({ color: 0x333333, alpha: 0.7 });
+
+            toolbarBg.y = app.screen.height - 50;
             toolbarBg.clear();
             toolbarBg.rect(0, 0, app.screen.width, 50);
             toolbarBg.fill({ color: 0x333333, alpha: 0.7 });
-
-            // Mettre à jour la sidebar aussi
-            sidebar.x = app.screen.width - 200;
-            sidebarBg.clear();
-            sidebarBg.rect(0, 0, 200, app.screen.height);
-            sidebarBg.fill({ color: 0x333333, alpha: 0.7 });
+            toolbarContainer.y = app.screen.height - 50;
+            toolbarContainer.width = app.screen.width;
 
             updateGridPosition();
             displayEventsInSidebar();
         });
 
+        // Update event sidebar content
         function displayEventsInSidebar() {
             // Supprimer tous les enfants de la sidebar sauf le fond
-            while (sidebar.children.length > 1) {
-                sidebar.removeChildAt(1);
+            while (rightSidebar.children.length > 1) {
+                rightSidebar.removeChildAt(1);
             }
 
             // Ajouter chaque événement à la sidebar
@@ -548,9 +611,32 @@ onMounted(() => {
                     }
                 });
 
-                sidebar.addChild(eventContainer);
+                rightSidebar.addChild(eventContainer);
             });
         }
+
+        // Ajouter un gestionnaire de touche Escape pour annuler le mode placement
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && placementMode) {
+                cancelPlacementMode();
+            }
+        });
+
+        // Add toolbar and sidebar to stage
+        app.stage.addChild(objectsContainer);
+
+        displayEventsInSidebar();
+
+        // Update grid position on resize
+        window.addEventListener('resize', () => {
+            toolbarBg.y = app.screen.height - 50; // Keep toolbar at the bottom
+            toolbarBg.clear();
+            toolbarBg.rect(0, 0, app.screen.width, 50);
+            toolbarBg.fill({ color: 0x333333, alpha: 0.7 });
+
+            updateGridPosition();
+            displayEventsInSidebar();
+        });
     })();
 });
 </script>
