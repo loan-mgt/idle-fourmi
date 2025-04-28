@@ -10,6 +10,7 @@ import { Application, Assets, Container, Graphics, Sprite, Text } from 'pixi.js'
 import { calculateTickMoney } from "@/services/game-utilities.service";
 import { GameService } from "@/services/game.service.js";
 import { Desk } from "@/models/desk.js";
+import { createHUD, updateMoneyDisplay } from './hud';
 
 const canvasContainer = ref(null);
 
@@ -49,35 +50,12 @@ onMounted(() => {
         let placementMode = false;
         let placementObject = null;
         let lastKnownMousePosition = { x: 0, y: 0 };
-
         await app.init({ background: '#1099bb', resizeTo: window });
         app.stage.eventMode = 'static';
         app.stage.hitArea = app.screen;
 
-        // Top texts
-        const gameTitle = new Text({
-            text: 'IdleFourmi',
-            style: {
-                fontSize: 30,
-                fill: 0xbb7ee0,
-                align: 'left',
-            }
-        });
-        gameTitle.x = 10;
-        gameTitle.y = 10;
-        app.stage.addChild(gameTitle);
-
-        const moneyDisplay = new Text({
-            text: `Argent: ${GameService.MONEY_AMOUNT}`,
-            style: {
-                fontSize: 20,
-                fill: 0x00ff00,
-                align: 'left',
-            }
-        });
-        moneyDisplay.x = 10;
-        moneyDisplay.y = 50;
-        app.stage.addChild(moneyDisplay);
+        // HUD creation (moved to hud.ts)
+        const { hudContainer, gameTitle, moneyDisplay } = createHUD(GameService.MONEY_AMOUNT);
 
         // Zoom and pan variables
         let isDragging = false;
@@ -293,9 +271,13 @@ onMounted(() => {
         toolbarContainer.eventMode = 'static';
         toolbarContainer.cursor = 'pointer';
         populateBottomBar(toolbarContainer);
-        app.stage.addChild(toolbarBg);
         app.stage.addChild(toolbarContainer);
+
+        // Add grid and objects containers first
+        app.stage.addChild(gridContainer);
         app.stage.addChild(objectsContainer);
+        // Add HUD container after, so it is always above the map
+        app.stage.addChild(hudContainer);
 
         // Écouteur pour suivre la position de la souris globalement
         app.stage.on('pointermove', (event) => {
@@ -378,8 +360,7 @@ onMounted(() => {
             elapsed += time.count;
             if (elapsed >= 600) {
                 GameService.MONEY_AMOUNT += calculateTickMoney();
-                moneyDisplay.text = `Argent: ${GameService.MONEY_AMOUNT}`;
-
+                updateMoneyDisplay(moneyDisplay, GameService.MONEY_AMOUNT);
                 elapsed = 0;
             }
         });
@@ -491,8 +472,7 @@ onMounted(() => {
                         const newGameObject = new selectedObjectType(gridX, gridY);
                         // Soustraire le coût de l'objet du montant d'argent
                         GameService.MONEY_AMOUNT -= newGameObject.cost;
-                        // Mettre à jour l'affichage du montant d'argent
-                        moneyDisplay.text = `Argent: ${GameService.MONEY_AMOUNT}`;
+                        updateMoneyDisplay(moneyDisplay, GameService.MONEY_AMOUNT);
 
                         const finalSprite = new Sprite(texture);
                         // Ajuster la taille du sprite en fonction de l'objet
