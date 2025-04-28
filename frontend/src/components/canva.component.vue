@@ -3,79 +3,72 @@
 </template>
 
 <script setup>
-
-import {Employee} from "@/models/employee.js";
-import {Plant} from "@/models/plant.js";
-import {onMounted, ref} from 'vue';
-import {Application, Assets, Container, Graphics, Sprite, Text} from 'pixi.js';
-import {calculateTickMoney} from "@/services/game-utilities.service";
-import {GameService} from "@/services/game.service.js";
-import {Desk} from "@/models/desk.js";
+import { Employee } from "@/models/employee.js";
+import { Plant } from "@/models/plant.js";
+import { onMounted, ref } from 'vue';
+import { Application, Assets, Container, Graphics, Sprite, Text } from 'pixi.js';
+import { calculateTickMoney } from "@/services/game-utilities.service";
+import { GameService } from "@/services/game.service.js";
+import { Desk } from "@/models/desk.js";
 
 const canvasContainer = ref(null);
 
+// Helper to create fallback texture
+function createFallbackTexture(width, height, alpha = 1) {
+    const fallbackGraphic = new Graphics();
+    fallbackGraphic.rect(0, 0, width, height);
+    fallbackGraphic.fill(0xFF0000, alpha);
+    return fallbackGraphic.generateCanvasTexture();
+}
 
 onMounted(() => {
     (async () => {
-        // Create a new application
         const app = new Application();
         let selectedObjectType = null;
+        let placementMode = false;
+        let placementObject = null;
+        let lastKnownMousePosition = { x: 0, y: 0 };
 
-        // Initialize the application
-        await app.init({background: '#1099bb', resizeTo: window});
+        await app.init({ background: '#1099bb', resizeTo: window });
         app.stage.eventMode = 'static';
         app.stage.hitArea = app.screen;
 
-        // Top texts 
+        // Top texts
         const gameTitle = new Text('IdleFourmi', {
             fontSize: 30,
-            fill: 0xbb7ee0, // Couleur blanche pour le texte
+            fill: 0xbb7ee0,
             align: 'left',
         });
-        gameTitle.x = 10;  // Décalage horizontal
-        gameTitle.y = 10;  // Décalage vertical
+        gameTitle.x = 10;
+        gameTitle.y = 10;
         app.stage.addChild(gameTitle);
 
         const moneyDisplay = new Text(`Argent: ${GameService.MONEY_AMOUNT}`, {
             fontSize: 20,
-            fill: 0x00ff00, // Couleur verte pour l'argent
+            fill: 0x00ff00,
             align: 'left',
         });
-        moneyDisplay.x = 10;  // Décalage horizontal
-        moneyDisplay.y = 50;  // Décalage vertical
+        moneyDisplay.x = 10;
+        moneyDisplay.y = 50;
         app.stage.addChild(moneyDisplay);
-        //\\
 
-        // Variables pour le zoom et le panoramique
+        // Zoom and pan variables
         let isDragging = false;
-        let dragStartPosition = {x: 0, y: 0};
-        let previousPosition = {x: 0, y: 0};
+        let dragStartPosition = { x: 0, y: 0 };
+        let previousPosition = { x: 0, y: 0 };
         let zoomLevel = 1;
         const MIN_ZOOM = 0.5;
         const MAX_ZOOM = 2.0;
         const ZOOM_STEP = 0.1;
 
-        window.addEventListener('resize', () => {
-            toolbar.y = app.screen.height - 50;
-            toolbarBg.clear();
-            toolbarBg.rect(0, 0, app.screen.width, 50);
-            toolbarBg.fill(0x333333, 0.7);
-
-            app.stage.hitArea = app.screen;
-
-            // Mise à jour de la position de la grille au redimensionnement
-            updateGridPosition();
-        });
-
-        // Append the application canvas to the container
+        // Append the application canvas to the container (once)
         app.canvas.className = 'pixi-canvas';
         app.canvas.style.width = '99%';
         app.canvas.style.height = '99%';
         canvasContainer.value.appendChild(app.canvas);
         const objectsContainer = new Container();
 
-        window.addEventListener("beforeunload", (event) => {
-            // Sauvegarde ici
+        window.addEventListener("beforeunload", () => {
             localStorage.setItem("MONEY_AMOUNT", GameService.MONEY_AMOUNT.toString());
             localStorage.setItem("GAME_OBJECTS", JSON.stringify(GameService.GAME_OBJECTS));
         });
@@ -83,12 +76,7 @@ onMounted(() => {
         // Load game data from localStorage
         const oldMoney = localStorage.getItem("MONEY_AMOUNT");
         if (oldMoney) {
-            if (isNaN(Number(oldMoney))) {
-                GameService.MONEY_AMOUNT = 20;
-            }
-            else {
-                GameService.MONEY_AMOUNT = Number(oldMoney)
-            }
+            GameService.MONEY_AMOUNT = isNaN(Number(oldMoney)) ? 20 : Number(oldMoney);
         }
         const oldObjects = localStorage.getItem("GAME_OBJECTS");
         if (oldObjects) {
@@ -98,12 +86,6 @@ onMounted(() => {
         if (GameService.GAME_OBJECTS && !GameService.GAME_OBJECTS.length) {
             // initGame()
         }
-
-        // Append the application canvas to the container
-        app.canvas.className = 'pixi-canvas';
-        app.canvas.style.width = '99%';
-        app.canvas.style.height = '99%';
-        canvasContainer.value.appendChild(app.canvas);
 
         // Créer un conteneur pour la grille
         const gridContainer = new Container();
@@ -132,7 +114,6 @@ onMounted(() => {
             }
         }
 
-        // Fonction pour centrer la grille avec prise en compte du zoom
         function updateGridPosition() {
             gridContainer.x = (app.screen.width - gridWidth * tileWidth * zoomLevel) / 2;
             gridContainer.y = (app.screen.height - gridHeight * tileHeight * zoomLevel) / 2;
@@ -174,8 +155,8 @@ onMounted(() => {
         toolbar.addChild(toolbarBg);
 
         // Add a button to the toolbar - using correct Graphics API
-        let changethis = [Desk, Employee, Plant];
-        for (let i = 0; i < changethis.length; i++) {
+        let objectTypes = [Desk, Employee, Plant];
+        for (let i = 0; i < objectTypes.length; i++) {
             const btn = new Graphics();
             let width = 50;
             let height = 50;
@@ -183,15 +164,12 @@ onMounted(() => {
 
             btn.rect(widthOffset, 0, width, height);
 
-            const objectType = changethis[i];
+            const objectType = objectTypes[i];
 
-            if (objectType.sprite == '') {
-                console.warn('No sprite for this object, using default sprite');
+            if (!objectType.sprite) {
                 btn.fill(0xFF0000);
             } else {
-                console.log('Loading sprite for this object: ', objectType.sprite);
                 Assets.load(objectType.sprite).then(texture => {
-                    console.log('Sprite loaded: ', texture);
                     const sprite = new Sprite(texture);
                     sprite.width = 50;
                     sprite.height = 50;
@@ -215,14 +193,8 @@ onMounted(() => {
             toolbar.addChild(btn);
         }
 
-        // Variables pour le mode placement style Sims
-        let placementMode = false;
-        let placementObject = null;
-        let lastKnownMousePosition = {x: 0, y: 0};
-
+        // Sidebar
         const sidebar = new Container();
-
-        // Create a sidebar container
         sidebar.x = app.screen.width - 200; // Position at right
         sidebar.y = 0;
         sidebar.width = 200;
@@ -269,29 +241,21 @@ onMounted(() => {
         // Gestion du zoom avec la molette de souris
         app.canvas.addEventListener('wheel', (event) => {
             event.preventDefault();
-
-            // Vérifier si la souris est en dehors de la sidebar
             if (!isOverUI(lastKnownMousePosition)) {
-                // Déterminer la direction du zoom
+                // 1. Get world coordinates under mouse before zoom
+                const worldX = (lastKnownMousePosition.x - gridContainer.x) / gridContainer.scale.x;
+                const worldY = (lastKnownMousePosition.y - gridContainer.y) / gridContainer.scale.y;
+
+                // 2. Calculate new zoom level
                 const zoomDirection = event.deltaY < 0 ? 1 : -1;
+                const newZoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomLevel + (zoomDirection * ZOOM_STEP)));
+                if (newZoomLevel === zoomLevel) return; // No change
+                zoomLevel = newZoomLevel;
 
-                // Calculer le nouveau niveau de zoom
-                const newZoomLevel = zoomLevel + (zoomDirection * ZOOM_STEP);
-
-                // Appliquer le nouveau zoom en respectant les limites
-                zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoomLevel));
-
-                // Mettre à jour la position et l'échelle de la grille
+                // 3. Apply new zoom and adjust position so world coords under mouse stay fixed
                 gridContainer.scale.set(zoomLevel);
-
-                // Pour un zoom centré sur la position de la souris, calculer l'offset
-                const mousePositionRelativeToGrid = {
-                    x: (lastKnownMousePosition.x - gridContainer.x) / gridContainer.scale.x,
-                    y: (lastKnownMousePosition.y - gridContainer.y) / gridContainer.scale.y
-                };
-
-                gridContainer.x = lastKnownMousePosition.x - mousePositionRelativeToGrid.x * zoomLevel;
-                gridContainer.y = lastKnownMousePosition.y - mousePositionRelativeToGrid.y * zoomLevel;
+                gridContainer.x = lastKnownMousePosition.x - worldX * zoomLevel;
+                gridContainer.y = lastKnownMousePosition.y - worldY * zoomLevel;
                 objectsContainer.scale.set(zoomLevel);
                 objectsContainer.x = gridContainer.x;
                 objectsContainer.y = gridContainer.y;
@@ -303,13 +267,20 @@ onMounted(() => {
             if (event.data.button === 0 && !isOverUI(event.global) && !placementMode) {
                 isDragging = true;
                 dragStartPosition = event.global.clone();
-                previousPosition = {x: gridContainer.x, y: gridContainer.y};
+                previousPosition = { x: gridContainer.x, y: gridContainer.y };
                 app.canvas.style.cursor = 'grabbing';
             }
         });
 
         // Gestionnaire pour terminer le panoramique
         app.stage.on('pointerup', () => {
+            if (isDragging) {
+                isDragging = false;
+                app.canvas.style.cursor = 'default';
+            }
+        });
+
+        app.stage.on('pointerupoutside', () => {
             if (isDragging) {
                 isDragging = false;
                 app.canvas.style.cursor = 'default';
@@ -323,7 +294,6 @@ onMounted(() => {
             if (elapsed >= 600) {
                 GameService.MONEY_AMOUNT += calculateTickMoney();
                 moneyDisplay.text = `Argent: ${GameService.MONEY_AMOUNT}`;
-                console.log('Money avancement : ', GameService.MONEY_AMOUNT);
 
                 elapsed = 0;
             }
@@ -337,13 +307,6 @@ onMounted(() => {
                 placementObject = null;
             }
         }
-
-        app.stage.on('pointerupoutside', () => {
-            if (isDragging) {
-                isDragging = false;
-                app.canvas.style.cursor = 'default';
-            }
-        });
 
         // Fonction pour activer le mode placement
         function startPlacementMode(initialEvent) {
@@ -375,19 +338,11 @@ onMounted(() => {
             if (selectedObjectType.sprite && selectedObjectType.sprite !== '') {
                 Assets.load(selectedObjectType.sprite).then(texture => {
                     startPlacement(texture);
-                }).catch(err => {
-                    // Fallback à un rectangle rouge en cas d'erreur
-                    const fallbackGraphic = new Graphics();
-                    fallbackGraphic.rect(0, 0, tileWidth, tileHeight);
-                    fallbackGraphic.fill(0xFF0000, 0.5);
-                    startPlacement(fallbackGraphic.generateCanvasTexture());
+                }).catch(() => {
+                    startPlacement(createFallbackTexture(tileWidth, tileHeight, 0.5));
                 });
             } else {
-                // Fallback si pas de sprite défini
-                const fallbackGraphic = new Graphics();
-                fallbackGraphic.rect(0, 0, tileWidth, tileHeight);
-                fallbackGraphic.fill(0xFF0000, 0.5);
-                startPlacement(fallbackGraphic.generateCanvasTexture());
+                startPlacement(createFallbackTexture(tileWidth, tileHeight, 0.5));
             }
         }
 
@@ -397,14 +352,6 @@ onMounted(() => {
                 placementObject.y = lastKnownMousePosition.y - placementObject.height / 2;
             }
         });
-
-        function cancelPlacementMode() {
-            placementMode = false;
-            if (placementObject) {
-                app.stage.removeChild(placementObject);
-                placementObject = null;
-            }
-        }
 
         function finishPlacementMode(event) {
             if (event.data.button === 2) {
@@ -477,17 +424,11 @@ onMounted(() => {
                     if (selectedObjectType.sprite && selectedObjectType.sprite !== '') {
                         Assets.load(selectedObjectType.sprite).then(texture => {
                             createFinalObject(texture);
-                        }).catch(err => {
-                            const fallbackGraphic = new Graphics();
-                            fallbackGraphic.rect(0, 0, tileWidth, tileHeight);
-                            fallbackGraphic.fill(0xFF0000);
-                            createFinalObject(fallbackGraphic.generateCanvasTexture());
+                        }).catch(() => {
+                            createFinalObject(createFallbackTexture(tileWidth, tileHeight));
                         });
                     } else {
-                        const fallbackGraphic = new Graphics();
-                        fallbackGraphic.rect(0, 0, tileWidth, tileHeight);
-                        fallbackGraphic.fill(0xFF0000);
-                        createFinalObject(fallbackGraphic.generateCanvasTexture());
+                        createFinalObject(createFallbackTexture(tileWidth, tileHeight));
                     }
                 }
 
@@ -523,6 +464,7 @@ onMounted(() => {
             sidebarBg.rect(0, 0, 200, app.screen.height);
             sidebarBg.fill(0x333333, 0.7);
 
+            updateGridPosition();
             displayEventsInSidebar();
         });
 
