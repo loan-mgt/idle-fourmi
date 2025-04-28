@@ -120,11 +120,18 @@ onMounted(() => {
         }
 
         function updateGridPosition() {
-            gridContainer.x = (app.screen.width - gridWidth * tileWidth * zoomLevel) / 2;
-            gridContainer.y = (app.screen.height - gridHeight * tileHeight * zoomLevel) / 2;
+            // Calculate available area (exclude right sidebar and bottom bar)
+            const availableWidth = app.screen.width - 200; // 200px for right sidebar
+            const availableHeight = app.screen.height - 50; // 50px for bottom bar
+            gridContainer.x = (availableWidth - gridWidth * tileWidth * zoomLevel) / 2;
+            gridContainer.y = (availableHeight - gridHeight * tileHeight * zoomLevel) / 2;
             gridContainer.scale.set(zoomLevel);
 
-            // Synchroniser le conteneur d'objets avec la grille
+            // Offset for bars
+            gridContainer.x += 0; // left bar is gone, so no offset
+            gridContainer.y += 0; // top bar is not present, so no offset
+
+            // Synchronize the objects container with the grid
             objectsContainer.x = gridContainer.x;
             objectsContainer.y = gridContainer.y;
             objectsContainer.scale.set(zoomLevel);
@@ -273,10 +280,12 @@ onMounted(() => {
         populateBottomBar(toolbarContainer);
         app.stage.addChild(toolbarContainer);
 
-        // Add grid and objects containers first
+        // Add containers in correct z-order: grid, objects, then UI (sidebar, toolbar, HUD)
         app.stage.addChild(gridContainer);
         app.stage.addChild(objectsContainer);
-        // Add HUD container after, so it is always above the map
+        app.stage.addChild(rightSidebar);
+        app.stage.addChild(toolbarBg);
+        app.stage.addChild(toolbarContainer);
         app.stage.addChild(hudContainer);
 
         // Écouteur pour suivre la position de la souris globalement
