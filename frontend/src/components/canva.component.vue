@@ -17,7 +17,7 @@ const canvasContainer = ref(null);
 function createFallbackTexture(width, height, alpha = 1) {
     const fallbackGraphic = new Graphics();
     fallbackGraphic.rect(0, 0, width, height);
-    fallbackGraphic.fill(0xFF0000, alpha);
+    fallbackGraphic.fill({ color: 0xFF0000, alpha });
     return fallbackGraphic.generateCanvasTexture();
 }
 
@@ -34,19 +34,25 @@ onMounted(() => {
         app.stage.hitArea = app.screen;
 
         // Top texts
-        const gameTitle = new Text('IdleFourmi', {
-            fontSize: 30,
-            fill: 0xbb7ee0,
-            align: 'left',
+        const gameTitle = new Text({
+            text: 'IdleFourmi',
+            style: {
+                fontSize: 30,
+                fill: 0xbb7ee0,
+                align: 'left',
+            }
         });
         gameTitle.x = 10;
         gameTitle.y = 10;
         app.stage.addChild(gameTitle);
 
-        const moneyDisplay = new Text(`Argent: ${GameService.MONEY_AMOUNT}`, {
-            fontSize: 20,
-            fill: 0x00ff00,
-            align: 'left',
+        const moneyDisplay = new Text({
+            text: `Argent: ${GameService.MONEY_AMOUNT}`,
+            style: {
+                fontSize: 20,
+                fill: 0x00ff00,
+                align: 'left',
+            }
         });
         moneyDisplay.x = 10;
         moneyDisplay.y = 50;
@@ -58,8 +64,8 @@ onMounted(() => {
         let previousPosition = { x: 0, y: 0 };
         let zoomLevel = 1;
         const MIN_ZOOM = 0.5;
-        const MAX_ZOOM = 2.0;
-        const ZOOM_STEP = 0.1;
+        const MAX_ZOOM = 3.0;
+        const ZOOM_STEP = 0.15;
 
         // Append the application canvas to the container (once)
         app.canvas.className = 'pixi-canvas';
@@ -151,46 +157,51 @@ onMounted(() => {
         // Add a visible background for the toolbar - using correct Graphics API
         const toolbarBg = new Graphics();
         toolbarBg.rect(0, 0, app.screen.width, 50);
-        toolbarBg.fill(0x333333, 0.7);
+        toolbarBg.fill({ color: 0x333333, alpha: 0.7 });
         toolbar.addChild(toolbarBg);
 
         // Add a button to the toolbar - using correct Graphics API
         let objectTypes = [Desk, Employee, Plant];
         for (let i = 0; i < objectTypes.length; i++) {
-            const btn = new Graphics();
+            // Create a container for the button
+            const btnContainer = new Container();
+            btnContainer.x = i * 60 + 10;
+            btnContainer.y = 0;
+            btnContainer.width = 50;
+            btnContainer.height = 50;
+            btnContainer.eventMode = 'static';
+            btnContainer.cursor = 'pointer';
+
+            // Create the button background
+            const btnBg = new Graphics();
             let width = 50;
             let height = 50;
             let widthOffset = i * 5;
-
-            btn.rect(widthOffset, 0, width, height);
-
+            btnBg.rect(widthOffset, 0, width, height);
             const objectType = objectTypes[i];
-
             if (!objectType.sprite) {
-                btn.fill(0xFF0000);
-            } else {
+                btnBg.fill({ color: 0xFF0000 });
+            }
+            btnContainer.addChild(btnBg);
+
+            // Add the sprite if available
+            if (objectType.sprite) {
                 Assets.load(objectType.sprite).then(texture => {
                     const sprite = new Sprite(texture);
                     sprite.width = 50;
                     sprite.height = 50;
-                    btn.addChild(sprite);
+                    btnContainer.addChild(sprite);
                 });
             }
 
-            btn.x = i * 60 + 10;
-            btn.y = 0;
-
-            btn.eventMode = 'static';
-            btn.cursor = 'pointer';
-
             // Stocker le type d'objet lors du clic
-            btn.on('pointerdown', (event) => {
+            btnContainer.on('pointerdown', (event) => {
                 selectedObjectType = objectType;
                 placementMode = true;
                 startPlacementMode(event);
             });
 
-            toolbar.addChild(btn);
+            toolbar.addChild(btnContainer);
         }
 
         // Sidebar
@@ -205,7 +216,7 @@ onMounted(() => {
 
         const sidebarBg = new Graphics();
         sidebarBg.rect(0, 0, 200, app.screen.height);
-        sidebarBg.fill(0x333333, 0.7);
+        sidebarBg.fill({ color: 0x333333, alpha: 0.7 });
         sidebar.addChild(sidebarBg);
 
         // Écouteur pour suivre la position de la souris globalement
@@ -378,10 +389,13 @@ onMounted(() => {
                         console.log("Pas assez d'argent pour placer cet objet!");
 
                         // Option: créer une notification visuelle temporaire
-                        const notificationText = new Text("Fonds insuffisants!", {
-                            fontSize: 20,
-                            fill: 0xff0000,
-                            align: 'center',
+                        const notificationText = new Text({
+                            text: "Fonds insuffisants!",
+                            style: {
+                                fontSize: 20,
+                                fill: 0xff0000,
+                                align: 'center',
+                            }
                         });
                         notificationText.x = app.screen.width / 2 - 100;
                         notificationText.y = app.screen.height / 2 - 50;
@@ -412,7 +426,7 @@ onMounted(() => {
                         finalSprite.height = tileHeight * newGameObject.height;
                         finalSprite.x = gridX * tileWidth;
                         finalSprite.y = gridY * tileHeight;
-
+                        // Only add to objectsContainer (which is a Container)
                         objectsContainer.addChild(finalSprite);
 
                         // Ajouter l'objet au jeu
@@ -456,13 +470,13 @@ onMounted(() => {
             toolbar.y = app.screen.height - 50;
             toolbarBg.clear();
             toolbarBg.rect(0, 0, app.screen.width, 50);
-            toolbarBg.fill(0x333333, 0.7);
+            toolbarBg.fill({ color: 0x333333, alpha: 0.7 });
 
             // Mettre à jour la sidebar aussi
             sidebar.x = app.screen.width - 200;
             sidebarBg.clear();
             sidebarBg.rect(0, 0, 200, app.screen.height);
-            sidebarBg.fill(0x333333, 0.7);
+            sidebarBg.fill({ color: 0x333333, alpha: 0.7 });
 
             updateGridPosition();
             displayEventsInSidebar();
@@ -486,7 +500,7 @@ onMounted(() => {
                 // Ajouter un fond pour l'événement
                 const eventBg = new Graphics();
                 eventBg.rect(0, 0, 180, 60);
-                eventBg.fill(0x555555);
+                eventBg.fill({ color: 0x555555 });
                 eventContainer.addChild(eventBg);
 
                 // Chargement de l'image
@@ -499,18 +513,24 @@ onMounted(() => {
                 });
 
                 // Ajouter le texte du titre
-                const title = new Text(event.title, {
-                    fontSize: 14,
-                    fill: 0xffffff,
+                const title = new Text({
+                    text: event.title,
+                    style: {
+                        fontSize: 14,
+                        fill: 0xffffff,
+                    }
                 });
                 title.x = 60;
                 title.y = 10;
                 eventContainer.addChild(title);
 
                 // Ajouter le tooltip comme texte plus petit
-                const tooltip = new Text(event.tooltip, {
-                    fontSize: 10,
-                    fill: 0xcccccc,
+                const tooltip = new Text({
+                    text: event.tooltip,
+                    style: {
+                        fontSize: 10,
+                        fill: 0xcccccc,
+                    }
                 });
                 tooltip.x = 60;
                 tooltip.y = 30;
